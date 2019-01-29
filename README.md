@@ -1,22 +1,22 @@
-# Compiler
+# Compyler
 Compiler for Spring 2019 Compilers Course, implemented in python. Compiles a custom language into a subset of the 6502 opcodes.  
 
 ## Setup
-Running the shell for the compiler can be done in one of two ways:
+To run the Compyler` there are two methods.
 
 ### Running from the source code
 
 1. Run `make init` in the root of the repository(this will install all requirements)
-2. Run `python3 ./src/cli/shell.py` from the root of the repository
+2. Run `python3 ./compyler` from the root of the repository
 
 ### Creating or using the latest build
 
 1. Run `make install` to build and install the compiler and shell to use it.
-2. Run `python3 -m compiler`
+2. Run `python3 -m compyler`
 
 ## Compiling
 
-Once in an instance of the shell for the compiler, run `compile <file>` providing a file path to compile. For example programs use any of the available ones located in the examples directory in the root of the repo. EX: `compile ./examples/AlansTestCase.txt`
+Once in an instance of the shell for the compiler, run `compile <file>` providing a file path to compile. For example programs use any of the available ones located in the examples directory in the root of the repo. EX: `python3 -m compyler ./examples/AssignVals.txt`
 
 ## Testing
 

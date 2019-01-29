@@ -1,13 +1,13 @@
-# Compiler
+# Compyler
 # Author:  Daniel Nicolas Gisolfi
 
-repo=Compiler
-version=0.1
+repo=Compyler
+version=0.0.1
 
 release: clean intro test build publish
 
 intro:
-	@echo "\n Compiler v$(version)"
+	@echo "\n $(repo) v$(version)"
 
 init:
 	@echo "\n Installing all requirements found in requirements.txt"
