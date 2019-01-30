@@ -26,6 +26,7 @@ def main():
 
     try:
         # Begin Lexing
+        print(colored('Beginning Lexical Analysis', 'blue'))
         lex = Lexer(source_code)
         # tokens = lex.tokens()
     
