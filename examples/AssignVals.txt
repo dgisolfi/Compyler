@@ -1,4 +1,4 @@
-/* comments are ignored */ 
+/* comments are ignored */
 {
     int a
     a=a

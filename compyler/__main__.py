@@ -24,9 +24,14 @@ def main():
     # Attempt to open the file for compilation
     source_code = getFile(file)
 
-    # Begin Lexing
-    lex = Lexer(source_code)
-    # tokens = lex.tokens()
+    try:
+        # Begin Lexing
+        lex = Lexer(source_code)
+        # tokens = lex.tokens()
+    
+    except KeyboardInterrupt:
+        print(colored('KeyboardInterrupt', 'red'))
+   
 
 
 
