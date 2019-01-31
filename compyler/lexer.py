@@ -28,9 +28,9 @@ class Lexer:
         print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} at position {token.position}', 'cyan'))
     
     def lex(self):
-        
         comment = False
         symbol_found = False
+        # arr[0] is the lexeme and arr[1] is the val 
         longest_match = ['', '']
         symbols = ['(', ')', '{', '}', '=', '==', '!=', '+']
         for pos, char in enumerate(self.code):
@@ -81,14 +81,11 @@ class Lexer:
                 if char in symbols:
                     print('symbol: ' + char)
                     symbol_found = True
+                   
                 # iterate through all token patterns and find all matches
-                # arr[0] is the lexeme and arr[1] is the val 
                 for lexeme in lexemes:
-                    # print(lexemes.get(lexeme))
-                    # print(lexemes[lexeme], self.buffer)
-                  
+                    # print(lexeme, self.buffer)
                     if re.match(lexemes[lexeme]['pattern'], self.buffer):
-                        print(lexeme, self.buffer)
                         if len(self.buffer) > len(longest_match[1]):
                             longest_match[0] = lexeme
                             longest_match[1] = self.buffer
@@ -97,17 +94,23 @@ class Lexer:
                                 longest_match[0] = lexeme
                                 longest_match[1] = self.buffer
 
-                    # print(longest_match)
+  
 
                 if symbol_found:
-                # if longest_match is not ['', '']:
+                    # if longest_match[1] is '':
+                    #     self.code = self.buffer + self.code
+                    #     print(self.code) 
+                    #     symbol_found = False
+                    # else:
                     token = Token(longest_match[0], longest_match[1], self.line, self.col)
                     self.__tokens.append(token)
                     self.logToken(token)
+                    # print(len(longest_match[1]))
+                    print(self.buffer)
+                    # self.buffer = self.buffer.replace(longest_match[1], '')
                     self.buffer = ''
+    
+                    # print(self.buffer)
                     longest_match[0] = ''
                     longest_match[1] = ''
                     symbol_found = False
-    
-                # else:
-                #     print('error')
