@@ -1,9 +1,6 @@
-/* comments are ignored */
-{   
-    print(a)
+{
     int a
     a=a
-    
     string b 
     a=b
 }$
