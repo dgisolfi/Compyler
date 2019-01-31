@@ -27,4 +27,4 @@ class Token:
     @property
     def position(self):
         return self.__position
-    
+
