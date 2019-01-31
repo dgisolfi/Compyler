@@ -3,7 +3,8 @@
 
 class Token:
     def __init__(self, kind, value, line, pos):
-        self.__kind = kind
+        # Add the T for token here to make code everywhere else cleaner
+        self.__kind = 'T_' + kind
         self.__value = value
         self.__line = line
         self.__position = pos

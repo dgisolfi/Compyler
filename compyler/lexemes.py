@@ -2,22 +2,77 @@
 # 2019-1-30
 
 lexemes = {
-    'TYPE': r'^(int|string|boolean)$',
-    'BOOLEAN': r'^(true|false)$',
-    'INEQUALITY_OP': r'^!=$',
-    'EQUALITY_OP': r'^==$',
-    'ADDITION_OP': r'^\+$',
-    'WHILE':  r'^while$',
-    'PRINT': r'^print$',
-    'ASSIGN_OP': r'^=$',
-    'L_PAREN': r'^\($',
-    'R_PAREN': r'^\)$',
-    'L_BRACE': r'^{$',
-    'R_BRACE': r'^}$',
-    'DIGIT': r'^\d$',
-    'ID': r'^[a-z]$',
-    'CHAR': r'[a-z]',
-    'QUOTE': r'^"$',
-    'EOP': r'^\$$',
-    'IF': r'^if$'
+    'TYPE': {
+        'priority': 1,
+        'pattern': r'^(int|string|boolean)$',
+
+    },
+    'BOOLEAN': {
+        'priority': 1,
+        'pattern':r'^(true|false)$',
+    },
+    'INEQUALITY_OP':{
+        'priority': 1,
+        'pattern':r'^!=$',
+    },
+    'EQUALITY_OP':{
+        'priority': 1,
+        'pattern': r'^==$'
+    },
+    'ADDITION_OP': {
+        'priority': 1,
+        'pattern': r'^\+$'
+    },
+    'WHILE': {
+        'priority': 1,
+        'pattern': r'^while$'
+    },
+    'PRINT': {
+        'priority': 1,
+        'pattern': r'^print$'
+    },
+    'ASSIGN_OP': {
+        'priority': 1,
+        'pattern': r'^=$'
+    },
+    'L_PAREN': {
+        'priority': 1,
+        'pattern': r'^\($'
+    },
+    'R_PAREN': {
+        'priority': 1,
+        'pattern': r'^\)$'
+    },
+    'L_BRACE': {
+        'priority': 1,
+        'pattern': r'^{$'
+    },
+    'R_BRACE': {
+        'priority': 1,
+        'pattern': r'^}$'
+    },
+    'DIGIT': {
+        'priority': 1,
+        'pattern': r'^\d$'
+    },
+    'ID': {
+        'priority': 1,
+        'pattern': r'^[a-z]$'
+    },
+    'CHAR': {
+        'priority': 1,
+        'pattern': r'[a-z]{1}$'
+    },
+    'QUOTE': {
+        'priority': 1,
+        'pattern': r'^"$'
+    },
+    'EOP': {
+        'priority': 1,
+        'pattern': r'^\$$'
+    },
+    'IF': {
+        'priority': 1,
+        'pattern': r'^if$'
+    }
 }
