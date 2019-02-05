@@ -10,12 +10,14 @@ class Lexer:
     def __init__(self, code):
         self.code = code
         self.__tokens = []
-        self.buffer = ''
+        self.buffer = []
+        self.programs = []
         self.line = 1
         self.col = 0
         self.comment = False
         self.verbose = True
         self.lex()
+
 
     @property
     def tokens(self):
@@ -27,90 +29,75 @@ class Lexer:
     def logToken(self, token):
         print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} at position {token.position}', 'cyan'))
     
+    # def splitPrograms(self):
+        
+
+
     def lex(self):
         comment = False
-        symbol_found = False
+        seperator_found = False
         # arr[0] is the lexeme and arr[1] is the val 
         longest_match = ['', '']
-        symbols = ['(', ')', '{', '}', '=', '==', '!=', '+']
-        for pos, char in enumerate(self.code):
+        seperators = ['"', '"', '(', ')', '{', '}', '=', '==', '!=', '+']
+        pos = 0
+        self.code = self.code.replace(' ', '')
+        while pos < len(self.code):
+            
+            char = self.code[pos]
+            # print(char)
             self.col += 1
-            if pos+1 >= len(self.code):
-                next_char = ' '
-            else:
-                next_char = self.code[pos+1]
-    
             # Keep track of line and col numbers
             if re.match(r'[\n]', char):
                 self.line += 1
                 self.col = 0
+                pos += 1
                 continue
+                
+            # # Remove Spaces, They cant be trusted!
+            # elif re.match(r' ', char):
+            #     pos += 1
+            #     continue
 
-            # Remove Spaces, They cant be trusted!
-            if re.match(r' ', char):
-                continue
-            
-            # COMMENTS
-            # Check for Open Comment
-            elif re.match('\/\*', self.buffer):
-                comment = True
-                self.buffer = ''
-                continue
-            # Once a comment has been opened skip the 
-            # input until it has been ended
-            elif comment:
-                # If the '*' or '/' char are noticed add them to the buffer
-                if re.match(r'\*', char):
-                    if re.match(r'\/', self.code[pos+1]):
-                        self.buffer += char
-                elif re.match(r'\/', char):
-                     if re.match(r'\*', self.code[pos-1]):
-                        self.buffer += char
+            else:
+                self.buffer.append(char)
 
-                # Check the buffer for the closing comment symbol
-                if re.match(r'\*\/', self.buffer):
-                    # if it was found were out of the comment, clear our buffer 
-                    # and go back to normal tokenizing
-                    comment = False
-                    self.buffer = ''
-                continue
-
-            # Check Buffer
-            else: 
-                self.buffer += char
-                if char in symbols:
-                    print('symbol: ' + char)
-                    symbol_found = True
+                if char in seperators:
+                    seperator_found = True
                    
                 # iterate through all token patterns and find all matches
                 for lexeme in lexemes:
-                    # print(lexeme, self.buffer)
-                    if re.match(lexemes[lexeme]['pattern'], self.buffer):
+                    if re.match(lexemes[lexeme]['pattern'], ''.join(self.buffer)):
                         if len(self.buffer) > len(longest_match[1]):
                             longest_match[0] = lexeme
-                            longest_match[1] = self.buffer
+                            longest_match[1] = ''.join(self.buffer)
                         elif len(self.buffer) == len(longest_match[1]):
-                            if lexemes[longest_match[0]]['priority'] < lexemes[lexeme]['priority']:
+                            # print(lexeme, longest_match[0])
+                            if lexemes[longest_match[0]]['priority'] > lexemes[lexeme]['priority']:
                                 longest_match[0] = lexeme
-                                longest_match[1] = self.buffer
+                                longest_match[1] = ''.join(self.buffer)
 
-  
+                # if isValid is False:
+                #     print('ERROR')
+                #     break
 
-                if symbol_found:
-                    # if longest_match[1] is '':
-                    #     self.code = self.buffer + self.code
-                    #     print(self.code) 
-                    #     symbol_found = False
-                    # else:
+                if seperator_found:
                     token = Token(longest_match[0], longest_match[1], self.line, self.col)
                     self.__tokens.append(token)
                     self.logToken(token)
-                    # print(len(longest_match[1]))
-                    print(self.buffer)
-                    # self.buffer = self.buffer.replace(longest_match[1], '')
-                    self.buffer = ''
-    
-                    # print(self.buffer)
+
+                    # print(self.buffer, pos)
+                    
+                    length = len(longest_match[1])
+                    self.buffer = self.buffer[length:]
                     longest_match[0] = ''
                     longest_match[1] = ''
-                    symbol_found = False
+                    seperator_found = False
+                    if len(self.buffer) > 1:
+                        pos -= len(self.buffer)
+                        # print(self.code[pos])
+                        self.buffer = []
+                        continue
+                
+                # print(self.buffer, longest_match[1])
+                pos += 1
+            
