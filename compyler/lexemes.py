@@ -4,7 +4,7 @@
 lexemes = {
     'TYPE': {
         'priority': 0,
-        'pattern': r'^(int|string|bool)$',
+        'pattern': r'^(int|string|boolean)$',
     },
     'BOOLEAN': {
         'priority': 0,
@@ -54,17 +54,17 @@ lexemes = {
         'priority': 3,
         'pattern': r'^\d$'
     },
-    'ID': {
-        'priority': 1,
-        'pattern': r'^[a-z]$'
-    },
     'CHAR': {
         'priority': 4,
-        'pattern': r'[a-z]{1}$'
+        'pattern': r'^[a-z]{1}$'
     },
     'QUOTE': {
         'priority': 2,
         'pattern': r'^"$'
+    },
+    'ID': {
+        'priority': 1,
+        'pattern': r'^[a-z]$'
     },
     'EOP': {
         'priority': 2,

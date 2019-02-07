@@ -15,7 +15,6 @@ class Lexer:
         self.col = 0
         self.pos = 0
         self.prev_pos = 0
-        self.seperator_found = False
         self.lex()
 
     @property
@@ -34,18 +33,18 @@ class Lexer:
         isComment = False
         isQuote = False
         buffer = ''
-        longest_match = ['','']
 
         while self.pos < len(self.code):
             char = self.code[self.pos]
-
+            buffer = self.code[self.prev_pos:self.pos]
             if not re.match(r'[a-z0-9]', char):
+                print(char, buffer)
                 if len(buffer) > 0:
-                    buffer, longest_match = self.dissectBuffer(buffer, longest_match)
-                self.seperator_found = True
+                    if self.dissectBuffer(''.join(buffer)) == 1:
+                        self.error()
                 if char is '':
                     # End of file
-                    self.error()
+                    break
                 elif re.match(' ', char):
                     pass
                 elif re.match('\n', char):
@@ -59,25 +58,14 @@ class Lexer:
                     pass
                 elif re.match(lexemes['ASSIGN_OP']['pattern'], char):
                     next = self.code[self.pos+1]
-                    if re.match(lexemes['EQUALITY_OP']['pattern'], next):
-                        token = Token('EQUALITY_OP', '==', self.line, self.col)
+                    if re.match(lexemes['ASSIGN_OP']['pattern'], next):
+                        token = Token('ASSIGN_OP', '==', self.line, self.col)
                         self.__tokens.append(token)
                         self.logToken(token)
                         self.pos += 1
                         self.col += 1
-                    else:
-                        token = Token('ASSIGN_OP', char, self.line, self.col)
-                        self.__tokens.append(token)
-                        self.logToken(token)
-
-                # COMMENTS
-                # Check for Open Comment
-                elif re.match(r'\/', char):
-                    # check next char is *
-                    next = self.code[self.pos+1]
-                    if re.match(r'\*', next):
-                        self.delComment(self.pos)
-
+                elif isComment:
+                    pass
                 elif re.match(symbols, char):
                     for lexeme in lexemes:
                         if re.match(lexemes[lexeme]['pattern'], char):
@@ -85,41 +73,60 @@ class Lexer:
                             self.__tokens.append(token)
                             self.logToken(token)
 
-                
+                 # print(char, buffer)
+
                 self.col += 1
                 self.pos += 1
                 self.prev_pos = self.pos
-            else:
-                buffer += char
-                self.pos += 1
-            
+                # print(char)
 
-    def dissectBuffer(self, buffer, longest_match):
+            else:
+                self.pos += 1
+
+
+    
+    def dissectBuffer(self, buffer):
         temp_col = self.col - len(buffer)
         longest_match = ['','']
 
-        for lexeme in lexemes:
-            if re.match(lexemes[lexeme]['pattern'], buffer):
-                if len(buffer) > len(longest_match[1]):
-                    longest_match[0] = lexeme
-                    longest_match[1] = buffer
-                elif len(buffer) == len(longest_match[1]):
-                    # print(lexeme, longest_match[0])
-                    if lexemes[longest_match[0]]['priority'] > lexemes[lexeme]['priority']:
+        # print(buffer)
+        while len(buffer) > 0:
+           
+            for lexeme in lexemes:
+                if re.match(lexemes[lexeme]['pattern'], buffer):
+                    # print(lexeme, buffer)
+                    if len(buffer) > len(longest_match[1]):
+                        print(lexeme, buffer)
                         longest_match[0] = lexeme
-                        longest_match[1] = buffer
+                        longest_match[1] = self.matchLexeme(lexeme, buffer)
+                        
+                        if lexemes[longest_match[0]]['priority'] > lexemes[lexeme]['priority']:
+                            longest_match[0] = lexeme
+                            longest_match[1] = self.matchLexeme(lexeme, buffer)
 
-        if self.seperator_found:
             token = Token(longest_match[0], longest_match[1], self.line, temp_col)
             self.__tokens.append(token)
             self.logToken(token)
             temp_col += len(longest_match[1])
-            # print('BUFFER1', buffer)
             buffer = buffer[len(longest_match[1]):]
-            # print('BUFFER2', buffer)
+        return 0
 
-        return buffer, longest_match
-
-    def delComment(self, start):
-
-        print(self.code[start:end])
+    def matchLexeme(self, lexeme, buffer):
+        match = ''
+        if lexeme is 'DIGIT' or lexeme is 'ID':
+            match = buffer[:0]
+        elif lexeme is 'TYPE':
+            if re.match(r'^int$', buffer):
+                match = 'int'
+            elif re.match(r'^string$', buffer):
+                match = 'string'
+            elif re.match(r'^boolean$', buffer):
+                match = 'boolean'
+        elif lexeme is 'BOOLEAN':
+            if re.match(r'^true$', buffer):
+                match = 'true'
+            elif re.match(r'^false$', buffer):
+                match = 'false'
+        else:
+            match = lexeme.lower()
+        return match

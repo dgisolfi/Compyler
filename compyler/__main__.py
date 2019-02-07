@@ -11,7 +11,6 @@ from lexer import Lexer
 
 def main():
 
-    # TODO: 
     del sys.argv[0]
     # check for required file arg
     if len(sys.argv) < 1:
