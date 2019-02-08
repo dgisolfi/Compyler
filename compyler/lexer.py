@@ -31,7 +31,6 @@ class Lexer:
 
     def lex(self):
         symbols = r'\(|\)|\{|\}|\$|\+'
-        isComment = False
         isQuote = False
         buffer = ''
         longest_match = ['','']
@@ -45,7 +44,8 @@ class Lexer:
                 self.seperator_found = True
                 if char is '':
                     # End of file
-                    self.error()
+                    # self.error() n 
+                    pass
                 elif re.match(' ', char):
                     pass
                 elif re.match('\n', char):
@@ -56,10 +56,10 @@ class Lexer:
                     self.__tokens.append(token)
                     self.logToken(token)
                 elif re.match(lexemes['QUOTE']['pattern'], char):
-                    pass
+                    self.buildQuote()
                 elif re.match(lexemes['ASSIGN_OP']['pattern'], char):
                     next = self.code[self.pos+1]
-                    if re.match(lexemes['EQUALITY_OP']['pattern'], next):
+                    if re.match(lexemes['ASSIGN_OP']['pattern'], next):
                         token = Token('EQUALITY_OP', '==', self.line, self.col)
                         self.__tokens.append(token)
                         self.logToken(token)
@@ -70,13 +70,23 @@ class Lexer:
                         self.__tokens.append(token)
                         self.logToken(token)
 
+                elif re.match(r'^!$', char):
+                    next = self.code[self.pos+1]
+                    if re.match(lexemes['ASSIGN_OP']['pattern'], next):
+                        token = Token('INEQUALITY_OP', '!=', self.line, self.col)
+                        self.__tokens.append(token)
+                        self.logToken(token)
+                        self.pos += 1
+                        self.col += 1
+                    
+
                 # COMMENTS
                 # Check for Open Comment
                 elif re.match(r'\/', char):
                     # check next char is *
                     next = self.code[self.pos+1]
                     if re.match(r'\*', next):
-                        self.delComment(self.pos)
+                        self.delComment()
 
                 elif re.match(symbols, char):
                     for lexeme in lexemes:
@@ -120,6 +130,37 @@ class Lexer:
 
         return buffer, longest_match
 
-    def delComment(self, start):
+    def delComment(self):
+        end_found = False
+        while not end_found:
+            if re.match(r'\*', self.code[self.pos]):
+                if re.match(r'\/', self.code[self.pos+1]):
+                    self.pos += 1
+                    # self.col += 2
+                    end_found = True
+                    break
+            self.pos += 1
 
-        print(self.code[start:end])
+    def buildQuote(self):
+        end_found = False
+
+        token = Token('QUOTE', self.code[self.pos], self.line, self.col)
+        self.__tokens.append(token)
+        self.logToken(token)
+        self.pos += 1
+        self.col += 1
+
+        while not end_found:
+            char = self.code[self.pos]
+            if re.match(r'\"', char):
+                token = Token('QUOTE', char, self.line, self.col)
+                self.__tokens.append(token)
+                self.logToken(token)
+                end_found = True
+            else:
+                token = Token('CHAR', char, self.line, self.col)
+                self.__tokens.append(token)
+                self.logToken(token)
+
+                self.pos += 1
+                self.col += 1
