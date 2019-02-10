@@ -1,0 +1,4 @@
+/* This will fail because strings - can't contain numbers */
+{
+    print("12")
+}$

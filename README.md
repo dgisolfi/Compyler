@@ -2,21 +2,23 @@
 Compiler for Spring 2019 Compilers Course, implemented in python. Compiles a custom language into a subset of the 6502 opcodes.  
 
 ## Setup
-To run the Compyler` there are two methods.
-
-### Running from the source code
-
-1. Run `make init` in the root of the repository(this will install all requirements)
-2. Run `python3 ./compyler` from the root of the repository
-
-### Creating or using the latest build
-
-1. Run `make install` to build and install the compiler and shell to use it.
-2. Run `python3 -m compyler`
+To run the Compyler its dependencies must be installed. Either in a Python Virtual Environment or just on your machine in the root of the directory run `make init`. This will install all the necessary requirements.
 
 ## Compiling
 
-Once in an instance of the shell for the compiler, run `compile <file>` providing a file path to compile. For example programs use any of the available ones located in the examples directory in the root of the repo. EX: `python3 -m compyler ./examples/AssignVals.txt`
+Once setup has been completed an Alan++ source code file can be compiled. To do so run `python3 compyler /path/to/file`
+
+### Arguements
+
+**path** - The path of an Alan++ source file to be compiled.
+
+### Flags
+
+**--verbose || -v** - when passed all logs of actions the compiler is taking will be sent to stout.
+
+#### Example
+
+`python3 compyler -v ./examples/Blocks.txt`
 
 ## Testing
 
@@ -25,6 +27,3 @@ To run tests for the compiler run the command `make test` in the root of the dir
 ## Publishing to PyPi
 
 To publish the latest release of the build to pypi run the following recipe: `make release`. This will test, build and publish the release to pypi.
-
-
-
