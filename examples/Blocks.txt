@@ -1,2 +1,0 @@
-{}$ {{{{{{}}}}}}$
-{{{{{{}}} /* comments are ignored */ }}}}$ { /* comments are still ignored */ int a}$
