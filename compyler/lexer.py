@@ -3,18 +3,19 @@
 
 import sys
 import re
-from token import Token
+from tokens import Token
 from lexemes import lexemes
 from termcolor import colored
 
 class Lexer:
-    def __init__(self, code):
+    def __init__(self, code, verbose):
         self.code = code
+        self.verbose = verbose
         self.__tokens = []
         self.line = 1
         self.col = 0
         self.pos = 0
-        self.prev_pos = 0
+        self.prev_pos = -1
         self.seperator_found = False
         self.lex()
 
@@ -23,7 +24,9 @@ class Lexer:
         return self.__tokens
 
     def logToken(self, token):
-        print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} at position {token.position}', 'cyan'))
+        # Only log tokens if the -v flag was passed.
+        if self.verbose:
+            print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} at position {token.position}', 'cyan'))
 
     def error(self):
         sys.exit(1)
@@ -44,7 +47,6 @@ class Lexer:
                 self.seperator_found = True
                 if char is '':
                     # End of file
-                    # self.error() n 
                     pass
                 elif re.match(' ', char):
                     pass
@@ -102,6 +104,8 @@ class Lexer:
             else:
                 buffer += char
                 self.pos += 1
+
+        print(colored(f'Lexical Analysis Completed', 'blue'))
             
 
     def dissectBuffer(self, buffer, longest_match):

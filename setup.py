@@ -12,7 +12,11 @@ setup(
     url='https://github.com/dgisolfi/Compyler',
     author='dgisolfi',
     license='MIT',
-    packages=['src'],
-    install_requires=['termcolor>=1.1.0','tqdm>=4.28.1'],
-    zip_safe=False
+    packages=['compyler'],
+    install_requires=['termcolor>=1.1.0','tqdm>=4.28.1','click>=7.0'],
+    zip_safe=False,
+    entry_points='''
+    [console_scripts]
+    compyler=compyler:__main__
+    '''
 )

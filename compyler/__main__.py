@@ -5,35 +5,36 @@ ver='0.0.1'
 package='compyler'
 
 import sys
+import click
 from termcolor import colored
 from error import Error
 from lexer import Lexer
 
-def main():
+@click.command()
+@click.argument('path')
+@click.option(
+    '--verbose', '-v', is_flag=True,
+    help='Will provide details on the steps the compiler is taking.'
+)
 
-    del sys.argv[0]
-    # check for required file arg
-    if len(sys.argv) < 1:
-        Error('main', 'No source file Provided, please provide a path to the file to be compiled.') 
-
-    file = sys.argv[0]
+def main(path, verbose):
+    '''
+    Given the path of a Alan++ source file to be compiled, generated code will be returned
+    '''
 
     print(colored(f'\n{package} v{ver}', 'blue'))
     
-    # Attempt to open the file for compilation
-    source_code = getFile(file)
+    source_code = getFile(path)
 
     try:
         # Begin Lexing
         print(colored('Beginning Lexical Analysis', 'blue'))
-        lex = Lexer(source_code)
+        lex = Lexer(source_code, verbose)
         # tokens = lex.tokens()
     
     except KeyboardInterrupt:
         print(colored('KeyboardInterrupt', 'red'))
    
-
-
 
 def getFile(file):
     # open the file and read the lines
