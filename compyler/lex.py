@@ -31,7 +31,7 @@ class Lex:
         print(colored(f'Program {self.program} Lexed. Errors: {self.errors} Warnings: {self.warnings}', 'blue'))
 
     def lex(self):
-        symbols = r'\(|\)|\{|\}|\$|\+|\=|\!'
+        symbols = r'\(|\)|\{|\}|\$|\+'
         isQuote = False
         buffer = ''
         longest_match = ['','']
@@ -40,13 +40,13 @@ class Lex:
             char = self.code[self.pos]
             # print(f'Last:{self.prev_pos} Cur:{self.pos} Char:{char}')
             if not re.match(r'[a-z0-9]', char):
+                self.seperator_found = True
                 if len(buffer) > 0:
                     buffer, longest_match = self.consumeBuffer(buffer, longest_match)
-                self.seperator_found = True
-                if char is '':
-                    # End of file
-                    pass
-                elif re.match(' ', char):
+                # if char is '':
+                #     # End of file
+                #     pass
+                if re.match(r'^\s$', char):
                     pass
                 elif re.match('\n', char):
                     self.line += 1
@@ -107,12 +107,13 @@ class Lex:
         longest_match = ['','']
         
         for lexeme in lexemes:
+            # print(lexemes[lexeme]['pattern'], buffer)
             if re.match(lexemes[lexeme]['pattern'], buffer):
+                print(buffer, lexeme)
                 if len(buffer) > len(longest_match[1]):
                     longest_match[0] = lexeme
                     longest_match[1] = buffer
                 elif len(buffer) == len(longest_match[1]):
-                    # print(lexeme, longest_match[0])
                     if lexemes[longest_match[0]]['priority'] > lexemes[lexeme]['priority']:
                         longest_match[0] = lexeme
                         longest_match[1] = buffer
@@ -123,6 +124,7 @@ class Lex:
             self.logToken(token)
             temp_col += len(longest_match[1])
             buffer = buffer[len(longest_match[1]):]
+            self.seperator_found = False
 
         return buffer, longest_match
 

@@ -4,74 +4,74 @@
 lexemes = {
     'TYPE': {
         'priority': 0,
-        'pattern': r'^(int|string|boolean)$',
+        'pattern': r'(int|string|boolean)',
     },
     'BOOLEAN': {
         'priority': 0,
-        'pattern':r'^(true|false)$',
+        'pattern':r'(true|false)',
     },
     'INEQUALITY_OP':{
         'priority': 2,
-        'pattern':r'^!=$',
+        'pattern':r'\!\=',
     },
     'EQUALITY_OP':{
         'priority': 2,
-        'pattern': r'^==$'
+        'pattern': r'\=\='
     },
     'ADDITION_OP': {
         'priority': 2,
-        'pattern': r'^\+$'
+        'pattern': r'\+'
     },
     'WHILE': {
         'priority': 0,
-        'pattern': r'^while$'
+        'pattern': r'while'
     },
     'PRINT': {
         'priority': 0,
-        'pattern': r'^print$'
+        'pattern': r'print'
     },
     'ASSIGN_OP': {
         'priority': 2,
-        'pattern': r'^=$'
+        'pattern': r'\='
     },
     'L_PAREN': {
         'priority': 2,
-        'pattern': r'^\($'
+        'pattern': r'\('
     },
     'R_PAREN': {
         'priority': 2,
-        'pattern': r'^\)$'
+        'pattern': r'\)'
     },
     'L_BRACE': {
         'priority': 2,
-        'pattern': r'^{$'
+        'pattern': r'\{'
     },
     'R_BRACE': {
         'priority': 2,
-        'pattern': r'^}$'
+        'pattern': r'\}'
     },
     'DIGIT': {
         'priority': 3,
-        'pattern': r'^\d$'
+        'pattern': r'\d'
     },
     'CHAR': {
         'priority': 4,
-        'pattern': r'^[a-z]{1}$'
+        'pattern': r'[a-z]'
     },
     'QUOTE': {
         'priority': 2,
-        'pattern': r'^"$'
+        'pattern': r'\"'
     },
     'ID': {
         'priority': 1,
-        'pattern': r'^[a-z]$'
+        'pattern': r'[a-z]'
     },
     'EOP': {
         'priority': 2,
-        'pattern': r'^\$$'
+        'pattern': r'\$'
     },
     'IF': {
         'priority': 0,
-        'pattern': r'^if$'
+        'pattern': r'if'
     }
 }

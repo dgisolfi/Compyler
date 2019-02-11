@@ -28,11 +28,13 @@ class Lexer:
                 code = self.removeComments(code)
                 code = self.replaceTabs(code)
                 program_tokens = Lex(code, self.verbose, program)
+                self.checkForEOP()
                 self.__tokens.append(program_tokens)
         print(colored(f'Lexical Analysis Completed', 'blue'))
 
     def removeComments(self, code):
         code = re.sub(r'\/\*[^\*]*\*\/', '', code)
+        # print(code)
         return code
 
     def replaceTabs(self, code):
@@ -42,7 +44,7 @@ class Lexer:
 
     def checkForEOP(self):
         if self.code.find('$') != len(self.programs):
-            pass
+            print('MISSING EOP')
 
     def programExit(self, program_number):
         print(colored(f'LEXER ❯ Lexed Program: {program_number}', 'cyan'))
