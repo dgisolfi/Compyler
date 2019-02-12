@@ -28,13 +28,11 @@ class Lexer:
                 code = self.removeComments(code)
                 code = self.replaceTabs(code)
                 program_tokens = Lex(code, self.verbose, program)
-                self.checkForEOP()
                 self.__tokens.append(program_tokens)
         print(colored(f'Lexical Analysis Completed', 'blue'))
 
     def removeComments(self, code):
         code = re.sub(r'\/\*[^\*]*\*\/', '', code)
-        # print(code)
         return code
 
     def replaceTabs(self, code):
