@@ -1,16 +1,16 @@
-# Compiler
+# Compyler
 # Author:  Daniel Nicolas Gisolfi
 
-repo=Compiler
-version=0.1
+repo=Compyler
+version=0.1.0
 
-release: clean intro test build publish
+release: clean intro build publish
 
 intro:
-	@echo "\n Compiler v$(version)"
+	@echo "\n $(repo) v$(version)"
 
 init:
-	@echo "\n Installing all requirements found in requirements.txt"
+	@echo "\nInstalling all requirements found in requirements.txt"
 	@python3 -m pip install -r requirements.txt
 
 clean:
@@ -19,8 +19,7 @@ clean:
 	-rm -r ./$(repo).egg-info
 
 test: intro
-	# @python3 -m pytest -s
-	@python3 -m pytest
+	@python3 -m pytest -s
 
 build:
 	@python setup.py sdist

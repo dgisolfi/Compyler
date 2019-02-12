@@ -1,0 +1,4 @@
+/*Missing '$' from end of program*/
+/*Lexer throws warning and fixes*/
+
+{print("test")}   
