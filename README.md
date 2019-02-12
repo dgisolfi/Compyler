@@ -14,11 +14,11 @@ Once setup has been completed an Alan++ source code file can be compiled. To do 
 
 ### Flags
 
-**--verbose || -v** - when passed all logs of actions the compiler is taking will be sent to stout.
+**--verbose or -v** - when passed all actions of compiler will be logged to stdout.
 
 #### Example
 
-`python3 compyler -v ./examples/Blocks.txt`
+`python3 compyler -v ./examples/AssignVals.txt`
 
 ## Testing
 

@@ -2,3 +2,7 @@
 {
     print("12")
 }$
+
+/* Invalid Break Line in String */
+{"two
+lines"}$

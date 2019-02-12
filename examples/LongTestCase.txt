@@ -1,4 +1,4 @@
-/* Long Test Case */
+/* Long Test Case - Everything Except Boolean Declaration */
 {
 	/* Int Declaration */
 	int a

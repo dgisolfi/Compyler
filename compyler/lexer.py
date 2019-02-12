@@ -28,26 +28,30 @@ class Lexer:
     def tokens(self):
         return self.__tokens
 
+    # Remove those pesky comments before even lexing
     def removeComments(self, code):
         code = re.sub(r'\/\*[^\*]*\*\/', '', code)
         return code
 
+    # In case someone dares use tabs we will avoid errors
     def replaceTabs(self, code):
         code = re.sub(r'\t', '   ', code)
         return code
-    
-    def checkEOP(self, code):
-        if not re.match(r'\$', code[-1]):
-            Warning('Lexer', f'EOP not found at end of program, inserting EOP', self.line, self.col)
-            code += '$'
-            
-        return code
+
+    # For the newbies that didnt know you 
+    # needed a '$' at the end of a program
+    def checkEOP(self):
+        if not re.match(r'\$', self.code[-1]):
+            Warning('Lexer', f'EOP not found at end of program, inserting EOP')
+            self.code += '$'
             
     def programExit(self):
+        # Fail the Lex if there were any errors
         if self.errors > 0:
             print(colored(f'Lex Failed for Program {self.program_count}. Errors: {self.errors}', 'red'))
         else:
             print(colored(f'Lex Completed for Program {self.program_count}. Errors: {self.errors}', 'blue'))
+        # Reset incase of another program
         self.warnings = 0
         self.errors = 0
         self.program_count += 1
@@ -63,7 +67,7 @@ class Lexer:
         self.code = self.replaceTabs(self.code)
 
         # Check for EOP at end of file
-        self.code = self.checkEOP(self.code)
+        self.checkEOP()
 
         symbols = r'\(|\)|\{|\}|\$|\+'
         buffer = ''
@@ -128,7 +132,6 @@ class Lexer:
                 self.cur_pos += 1
                 self.col += 1
 
-        print(colored(f'Lexical Analysis Completed', 'blue'))
         return self.__tokens
             
 
@@ -158,8 +161,11 @@ class Lexer:
             buffer = buffer[len(value):]
             temp_col += len(value)
 
+    # If an opening quote is found traverse the string
+    # and create tokens for valid chars
     def buildQuote(self):
         end_found = False
+        # Create token for the open quote
         token = Token('QUOTE', self.code[self.cur_pos], self.line, self.col)
         self.__tokens.append(token)
         self.logToken(token)
@@ -167,22 +173,24 @@ class Lexer:
         self.col += 1
 
         while not end_found:
+            # get next char
             char = self.code[self.cur_pos]
+            # Found closing quote
             if re.match(r'\"', char):
                 token = Token('QUOTE', char, self.line, self.col)
                 self.__tokens.append(token)
                 self.logToken(token)
                 end_found = True
             else:
-                # Check foor invalid types!
-                if not re.match(r'^[a-z\s]$', char):
+                # Check foor invalid types! otherwise make a token for the valid chars
+                if not re.match(r'^[a-z\s]$', char) or re.match(r'\n', char):
                     self.errors += 1
-                    Error('Lexer', f'Character list contains invalid character: "{char}". It can only contain lowercase letters and spaces.', 
+                    Error('Lexer', f'Character list contains invalid character: [ {repr(char)} ]. It can only contain lowercase letters and spaces.', 
                     self.line, self.col)
-                token = Token('CHAR', char, self.line, self.col)
-                self.__tokens.append(token)
-                self.logToken(token)
+                else:
+                    token = Token('CHAR', char, self.line, self.col)
+                    self.__tokens.append(token)
+                    self.logToken(token)
 
                 self.cur_pos += 1
                 self.col += 1
-    

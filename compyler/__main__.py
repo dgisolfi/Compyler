@@ -18,9 +18,7 @@ from lexer import Lexer
 )
 
 def main(path, verbose):
-    '''
-    Given the path of a Alan++ source file to be compiled, generated code will be returned
-    '''
+    # Given the path of a Alan++ source file to be compiled, generated code will be returned
 
     print(colored(f'\n{package} v{ver}', 'blue'))
     
@@ -30,7 +28,8 @@ def main(path, verbose):
         # Begin Lexing
         print(colored('Beginning Lexical Analysis', 'blue'))
         lex = Lexer(source_code, verbose)
-        # tokens = lex.tokens()
+        tokens = lex.tokens
+        print(colored(f'Lexical Analysis Completed', 'blue'))
     
     except KeyboardInterrupt:
         print(colored('KeyboardInterrupt', 'red'))
