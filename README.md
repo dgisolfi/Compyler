@@ -1,4 +1,4 @@
-# Compyler
+# Compyler [![Compyler version](https://img.shields.io/pypi/v/Compyler.svg)](https://pypi.org/project/Compyler)
 Compiler for Spring 2019 Compilers Course, implemented in python. Compiles a custom language into a subset of the 6502 opcodes.  
 
 ## Setup
@@ -6,7 +6,7 @@ To run the Compyler it must be installed. It can be installed either from pypi o
 
 ### From PyPi
 
-Simply use pip to install the latest release of the compyler. To do so run `pip install Compyler`
+Simply use pip to install the [latest release](https://pypi.org/project/Compyler/) of the compyler. To do so run `pip install Compyler`. 
 
 ### From Source
 
