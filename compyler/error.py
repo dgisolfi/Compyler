@@ -19,5 +19,3 @@ class Error:
             sys.exit()
         else:
             print(f"{colored(f'Error in {self.module}', 'red')}: {self.message} at line:{self.line} col:{self.pos}")
-
-        

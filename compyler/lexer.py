@@ -3,11 +3,12 @@
 
 import sys
 import re
-from error import Error
-from warning import Warning
-from tokens import Token
-from lexemes import lexemes, buffer_lexemes
 from termcolor import colored
+from compyler.error import Error
+from compyler.warning import Warning
+from compyler.tokens import Token
+from compyler.lexemes import lexemes, buffer_lexemes
+
 
 class Lexer:
     def __init__(self, code, verbose):
@@ -75,7 +76,8 @@ class Lexer:
         while self.cur_pos < len(self.code):
             char = self.code[self.cur_pos]
             buffer = self.code[self.prev_pos:self.cur_pos]
-
+            # If this is not a character we know we can tokenize it,
+            # otherwise build the buffer with digits and chars etc.
             if not re.match(r'[a-z0-9]', char):
                 if len(buffer) > 0:
                    self.consumeBuffer(buffer)

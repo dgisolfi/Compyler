@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='Compyler',
-    version='0.0.1',
+    version='0.1.0',
     description='Compiler for Spring 2019 Compilers Course, implemented in python.'+ 
     'Compiles a custom language into a subset of the 6502 opcodes.',
     long_description=open('README.md').read(),
@@ -17,6 +17,6 @@ setup(
     zip_safe=False,
     entry_points='''
     [console_scripts]
-    compyler=compyler:__main__
+    compyler=compyler.__main__:main
     '''
 )

@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 # 2019-1-22
 
-ver='0.0.1'
+ver='0.1.0'
 package='compyler'
 
 import sys
 import click
 from termcolor import colored
-from error import Error
-from lexer import Lexer
+from compyler.error import Error
+from compyler.lexer import Lexer
 
 @click.command()
 @click.argument('path')
@@ -19,17 +19,15 @@ from lexer import Lexer
 
 def main(path, verbose):
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
-
-    print(colored(f'\n{package} v{ver}', 'blue'))
+    # Gotta include the emoji just because Alan said not to
+    print(colored(f'\n{package} v{ver} 🐍', 'blue'))
     
     source_code = getFile(path)
 
     try:
         # Begin Lexing
-        print(colored('Beginning Lexical Analysis', 'blue'))
         lex = Lexer(source_code, verbose)
         tokens = lex.tokens
-        print(colored(f'Lexical Analysis Completed', 'blue'))
     
     except KeyboardInterrupt:
         print(colored('KeyboardInterrupt', 'red'))
