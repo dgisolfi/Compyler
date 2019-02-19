@@ -65,7 +65,7 @@ def main(path, verbose):
             tokens = lex.tokens
             # print(tokens)
             # Parse the tokens
-            parse = Parser(tokens)
+            parse = Parser(tokens,verbose, program+1)
             program += 1
     
     except KeyboardInterrupt:

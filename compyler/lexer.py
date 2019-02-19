@@ -41,11 +41,10 @@ class Lexer:
         if self.errors > 0:
             print(colored(f'Lex Failed for Program {self.program}. Errors: {self.errors}', 'red'))
         else:
-            print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}', 'blue'))
+            print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}\n', 'blue'))
         # Reset incase of another program
         self.warnings = 0
         self.errors = 0
-        self.program += 1
         
     def logToken(self, token):
         # Only log tokens if the -v flag was passed.
@@ -53,6 +52,7 @@ class Lexer:
             print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} column {token.position}', 'cyan'))
 
     def lex(self):
+        print(colored(f'Lexing Program {self.program}', 'blue'))
         # Check for EOP at end of file
         self.checkEOP()
 
