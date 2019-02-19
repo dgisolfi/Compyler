@@ -10,7 +10,7 @@ import click
 from termcolor import colored
 from error import Error
 from lexer import Lexer
-# from parser import Parser
+from parser import Parser
 
 # @click.command()
 # @click.argument('path')
@@ -45,7 +45,7 @@ def main(path, verbose):
 
     try:
         program = 0
-        print(programs)
+        # print(programs)
         # Check if this is the last program
         if programs[(len(programs)-1)] is '':
                 programs[(len(programs)-2)] += '$'
@@ -63,9 +63,9 @@ def main(path, verbose):
             # to be accessed at 0)
             lex = Lexer(code, verbose, program+1)
             tokens = lex.tokens
-            print(tokens)
+            # print(tokens)
             # Parse the tokens
-            # parse = Parser(tokens)
+            parse = Parser(tokens)
             program += 1
     
     except KeyboardInterrupt:

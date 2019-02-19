@@ -55,3 +55,9 @@ class Tree:
         # check if the current node is a branch and update the current node
         if kind is 'Branch':
             self.cur_node = node
+
+
+#    self.cst.addNode('Root', 'Root', 'BRANCH')
+    #    self.cst.endBranch()
+
+    #    self.cst.addNode('test', 'test', 'BRANCH')
