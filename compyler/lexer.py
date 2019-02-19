@@ -4,20 +4,20 @@
 import sys
 import re
 from termcolor import colored
-from compyler.error import Error
-from compyler.warning import Warning
-from compyler.tokens import Token
-from compyler.lexemes import lexemes, buffer_lexemes
+from error import Error
+from warning import Warning
+from tokens import Token
+from lexemes import lexemes, buffer_lexemes
 
 
 class Lexer:
-    def __init__(self, code, verbose):
+    def __init__(self, code, verbose, program):
         self.code = code
         self.verbose = verbose
         self.__tokens = []
         self.code = code
         self.verbose = verbose
-        self.program_count = 1
+        self.program = program
         self.line = 1
         self.col = 1
         self.cur_pos = 0
@@ -29,16 +29,6 @@ class Lexer:
     def tokens(self):
         return self.__tokens
 
-    # Remove those pesky comments before even lexing
-    def removeComments(self, code):
-        code = re.sub(r'\/\*[^\*]*\*\/', '', code)
-        return code
-
-    # In case someone dares use tabs we will avoid errors
-    def replaceTabs(self, code):
-        code = re.sub(r'\t', '   ', code)
-        return code
-
     # For the newbies that didnt know you 
     # needed a '$' at the end of a program
     def checkEOP(self):
@@ -49,13 +39,13 @@ class Lexer:
     def programExit(self):
         # Fail the Lex if there were any errors
         if self.errors > 0:
-            print(colored(f'Lex Failed for Program {self.program_count}. Errors: {self.errors}', 'red'))
+            print(colored(f'Lex Failed for Program {self.program}. Errors: {self.errors}', 'red'))
         else:
-            print(colored(f'Lex Completed for Program {self.program_count}. Errors: {self.errors}', 'blue'))
+            print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}', 'blue'))
         # Reset incase of another program
         self.warnings = 0
         self.errors = 0
-        self.program_count += 1
+        self.program += 1
         
     def logToken(self, token):
         # Only log tokens if the -v flag was passed.
@@ -63,10 +53,6 @@ class Lexer:
             print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} column {token.position}', 'cyan'))
 
     def lex(self):
-        # Remove all Comments and replace tab characters
-        self.code = self.removeComments(self.code)
-        self.code = self.replaceTabs(self.code)
-
         # Check for EOP at end of file
         self.checkEOP()
 
