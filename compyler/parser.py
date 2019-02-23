@@ -2,8 +2,8 @@
 # 2019-2-12
 from error import Error
 from termcolor import colored
+from production import createProductions
 # from tree import Tree
-
 class Parser:
     def __init__(self, tokens, verbose, program):
         self.__tokens = tokens
@@ -14,10 +14,13 @@ class Parser:
         self.warnings = 0
         self.errors = 0
         self.program = program
+        self.productions = self.createProductions()
+
+        # self.productions.get('Statement')['T_PRINT']()
+     
         self.parse()
 
     # Check if the current token is an appropriate token for the scope
-   
     def match(self, current_token, expected_tokens):
         retval = False
         print(current_token, expected_tokens)
@@ -45,14 +48,16 @@ class Parser:
 
     def logProduction(self, fn):
         if self.verbose:
-            print(colored(f'PARSER ❯ {fn}', 'cyan'))
+            print(colored(f'PARSER ❯ {fn}', 'green'))
     
     ''' All productions to preform "derivations" '''
     def parse(self):
         print(colored(f'Parsing Program {self.program}', 'blue'))
+        self.logProduction('parse()')
         self.parseProgram()
 
     def parseProgram(self):
+        self.logProduction('parseProgram()')
         # Parse the block then Check for EOP!
         self.parseBlock()
         if not self.match(self.current_token.kind, ['T_EOP']):
@@ -62,10 +67,11 @@ class Parser:
             self.consume()
 
     def parseBlock(self):
+        self.logProduction('parseBlock()')
         # Match Open 
         if not self.match(self.current_token.kind, ['T_LEFT_BRACE']):
             # Cant use F string here as curly braces cant be escaped in them
-            Error('Parser', 'Expected [ { ] found ' + str(self.current_token) +' at', 
+            Error('Parser', 'Expected [ { ] found ' + self.current_token.kind +' at', 
             self.current_token.line, self.current_token.position)
             self.errors += 1
         else:
@@ -75,23 +81,38 @@ class Parser:
         # ...and close brace
         if not self.match(self.current_token.kind, ['T_RIGHT_BRACE']):
             # Cant use F string here as curly braces cant be escaped in them
-            Error('Parser', 'Expected [ { ] found ' + str(self.current_token) +' at', 
+            Error('Parser', 'Expected [ } ] found ' + self.current_token.kind +' at', 
             self.current_token.line, self.current_token.position)
             self.errors += 1
         else:
             self.consume()
 
-
     # Statements 
     def parseStatementList(self):
-        pass
+        self.logProduction('parseStatementList()')
+        
+        while not self.match(self.current_token, ['T_RIGHT_BRACE']):
+            self.parseStatement()
+        
+        return True
 
     def parseStatement(self):
-        pass
+        self.logProduction('parseStatement()')
+
+        # Match for any valid statements
+        if not self.match(self.current_token.kind, self.productions.get('Statement')):
+            # Cant use F string here as curly braces cant be escaped in them
+            Error('Parser', f'Expected {self.productions.get("Statement")} found {self.current_token.kind} at', 
+            self.current_token.line, self.current_token.position)
+            self.errors += 1
+        else:
+            self.consume()
+            # productions_functions[self.current_token.kind]()
+            
 
     # All possible statements 
     def parsePrintStatement(self):
-        pass
+        print('fuck')
 
     def parseAssignmentStatement(self):
         pass
@@ -140,11 +161,27 @@ class Parser:
     def parseIntOp(self):
         pass
 
-    
-    
-    
 
-       
-       
+    def createProductions(self):
+        productions = {}
 
+        statements = []
+        statements.append({'T_PRINT':self.parsePrintStatement})
+        statements.append({'T_ASSIGNMENT_OP':self.parseAssignmentStatement})
+        statements.append({'T_TYPE':self.parseVarDecl})
+        statements.append({'T_WHILE':self.parseWhileStatement})
+        statements.append({'T_IF':self.parseIfStatement})
+        statements.append({'T_LEFT_BRACE':self.parseBlock})
+
+        expr = []
+        expr.append({'T_INT':self.parseIntExpr})
+        expr.append({'T_QUOTE':self.parseStringExpr})
+        expr.append({'T_BOOLEAN':self.parseBooleanExpr})
+        expr.append({'T_ID':self.parseId})
+
+        productions['Statement'] = statements
+        productions['Expr'] = expr
+        return productions
+
+    
     
