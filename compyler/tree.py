@@ -1,63 +1,65 @@
 #!/usr/bin/python3
-# 2019-2-12
+# 2019-2-26
 
+import pptree 
 from node import Node
 
 class Tree:
     def __init__(self):
-       self.__root = None
-       self.cur_node = Node('Root', 'Root', [], {}, 0)
+        self.__root = None
+        # Create a 'Empty Object' to initialize
+        # the current node
+        self.current_node = Node(None, None)
+        self.__tree = ''
+
+    def __repr__(self):
+        return str(self)
 
     def __str__(self):
-        return self.traverse(self.__root, 0)
+        # self.traverse(self.__root, 0)
+        # print(self.__tree)
+        pptree.print_tree(self.__root)
+        return ''
 
     def traverse(self, node, depth):
-        tree = ''
         for i in range(0, depth):
-            tree += '\t'
+            self.__tree += '-'
 
-        # check for children
-        if len(node.children) is not 0:
-            # There are children so we will have to traverse deeper
-
-            for child in len(node.children):
-                self.traverse(node.children[child], depth+1)
-
-        # There are no children, add the node and end the branch there
+        if len(node.children) is 0:
+            # Leaf Node
+            self.__tree += f'[ {node.name} ]\n'
         else:
-            tree += f'{node.name}\n'
+            # Branch Node
+            self.__tree += f'<{node.name}>\n'
 
-        return tree
-
-    # Return the root of the tree
-    @property
-    def root(self):
-        return self.__root
-
-    def endBranch(self):
-        if self.cur_node.parent is not None and self.cur_node.name is not None:
-            self.cur_node = self.cur_node.parent
-
-    # Add a node to the tree
-    def addNode(self, name, value, kind):
-        node = Node(name, value, [], {}, 0)
-
-        # Check if root needs to be updated
-        if self.__root is None:
+            for i in range(0, len(node.children)):
+                self.traverse(node.children[i], depth+1)
+    
+    def addNode(self, name, kind):
+        # Create a new Node
+        node = Node(name, Node(None, None))
+        # Is this the root node??
+        if self.__root is None or not self.__root:
+            # This is the root node
             self.__root = node
-        # This is a child node
+            # Leaf(node.name)
         else:
-            # node.setParent(self.cur_node)
-            node.setParent(self.cur_node)
-            # add the child node into the current nodes known children
-            self.cur_node.children.append(node)
-        
-        # check if the current node is a branch and update the current node
-        if kind is 'Branch':
-            self.cur_node = node
+            # We a child, make the parent the cur node
+            node.setParent = self.current_node
+            # Make sure our parent knows were there kid!
+            self.current_node.children.append(node)
+
+        # Check if we are a branch node
+        if kind is 'branch':
+            # Update the current node
+            self.current_node = node
 
 
-#    self.cst.addNode('Root', 'Root', 'BRANCH')
-    #    self.cst.endBranch()
-
-    #    self.cst.addNode('test', 'test', 'BRANCH')
+    # Was trying to make it sound better than ending a child like alan did. 
+    # Now its like your kicking your 30 y/old child out of the house!
+    def cutOffChildren(self):
+        # Move up to the parent node if possible
+        if self.current_node.parent is not None and self.current_node.parent.name is not None:
+            self.current_node = self.current_node.parent
+        else:
+            print('BIG OOF. This should never happen')

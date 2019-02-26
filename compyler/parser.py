@@ -1,20 +1,21 @@
 #!/usr/bin/python3
 # 2019-2-12
+from tree import Tree
 from error import Error
 from termcolor import colored
-from production import createProductions
+# from production import createProductions
 # from tree import Tree
 class Parser:
     def __init__(self, tokens, verbose, program):
         self.__tokens = tokens
         self.token_pointer = 0
         self.current_token = self.__tokens[self.token_pointer]
-        self.cst = None
+        self.cst = Tree()
         self.verbose = verbose
         self.warnings = 0
         self.errors = 0
         self.program = program
-        self.productions = self.createProductions()
+        # self.productions = self.createProductions()
 
         # self.productions.get('Statement')['T_PRINT']()
      
@@ -54,12 +55,17 @@ class Parser:
     def parse(self):
         print(colored(f'Parsing Program {self.program}', 'blue'))
         self.logProduction('parse()')
+        self.cst.addNode('parse()', 'branch')
         self.parseProgram()
+        self.cst.cutOffChildren()
 
     def parseProgram(self):
         self.logProduction('parseProgram()')
+        self.cst.addNode('parseProgram()', 'branch')
         # Parse the block then Check for EOP!
         self.parseBlock()
+        self.cst.cutOffChildren()
+
         if not self.match(self.current_token.kind, ['T_EOP']):
             Error('Parser', f'Expected [ $ ] found {self.current_token} at', self.current_token.line, self.current_token.position)
             self.errors += 1
@@ -68,6 +74,7 @@ class Parser:
 
     def parseBlock(self):
         self.logProduction('parseBlock()')
+        
         # Match Open 
         if not self.match(self.current_token.kind, ['T_LEFT_BRACE']):
             # Cant use F string here as curly braces cant be escaped in them
@@ -76,8 +83,11 @@ class Parser:
             self.errors += 1
         else:
             self.consume()
-
+        
+        self.cst.addNode('parseBlock()', 'branch')
         self.parseStatementList()
+        self.cst.cutOffChildren()
+
         # ...and close brace
         if not self.match(self.current_token.kind, ['T_RIGHT_BRACE']):
             # Cant use F string here as curly braces cant be escaped in them
@@ -86,6 +96,8 @@ class Parser:
             self.errors += 1
         else:
             self.consume()
+ 
+
 
     # Statements 
     def parseStatementList(self):

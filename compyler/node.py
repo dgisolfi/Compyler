@@ -2,21 +2,19 @@
 # 2019-2-12
 
 class Node:
-    def __init__(self, name, data, children, parent, depth):
+    def __init__(self, name, parent):
        self.__name = name
-       self.__data = data
-       self.__children = children
+       self.__children = []
        self.__parent = parent
-       self.__depth = depth
 
     # Getters for all attributes
     @property
     def name(self):
         return self.__name
     
-    @property
-    def data(self):
-        return self.__data
+    # @property
+    # def data(self):
+    #     return self.__data
 
     @property
     def children(self):
@@ -26,13 +24,17 @@ class Node:
     def parent(self):
         return self.__parent
 
-    @property
-    def depth(self):
-        return self.__depth
+    # @property
+    # def depth(self):
+    #     return self.__depth
 
     # Setters
     @parent.setter
     def setParent(self, parent):
         self.__parent = parent
+
+    @children.setter
+    def append(self, child):
+        self.__children.append(child)
 
     # or not self.__root
