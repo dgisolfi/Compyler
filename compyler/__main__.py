@@ -62,11 +62,27 @@ def main(path, verbose):
             # cuz it I dont want it to start at 0 But the array needs 
             # to be accessed at 0)
             lex = Lexer(code, verbose, program+1)
+            if lex.errors is not 0:
+                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed', 'blue'))
+                program += 1
+                continue
+
             tokens = lex.tokens
             # print(tokens)
             # Parse the tokens
             parse = Parser(tokens,verbose, program+1)
+            print(parse.cst)
+            # for node in parse.cst.:
+            #     print(node.name)
+            if parse.errors is not 0:
+                # print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed', 'blue'))
+                program += 1
+                continue
+            
+           
             program += 1
+           
+       
     
     except KeyboardInterrupt:
         print(colored('KeyboardInterrupt', 'red'))

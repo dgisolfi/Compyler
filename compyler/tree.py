@@ -9,7 +9,7 @@ class Tree:
         self.__root = None
         # Create a 'Empty Object' to initialize
         # the current node
-        self.current_node = Node(None, None)
+        self.__current_node = Node(None, None)
         self.__tree = ''
 
     def __repr__(self):
@@ -20,6 +20,16 @@ class Tree:
         # print(self.__tree)
         pptree.print_tree(self.__root)
         return ''
+
+    @property
+    def current_node(self):
+        return self.__current_node
+
+    # Removes the current Node from the Tree
+    def delCurNode(self):
+        parent = self.__current_node.parent
+        parent.children.pop()
+        self.__current_node = parent
 
     def traverse(self, node, depth):
         for i in range(0, depth):
@@ -45,21 +55,21 @@ class Tree:
             # Leaf(node.name)
         else:
             # We a child, make the parent the cur node
-            node.setParent = self.current_node
+            node.setParent = self.__current_node
             # Make sure our parent knows were there kid!
-            self.current_node.children.append(node)
+            self.__current_node.children.append(node)
 
         # Check if we are a branch node
         if kind is 'branch':
             # Update the current node
-            self.current_node = node
+            self.__current_node = node
 
 
     # Was trying to make it sound better than ending a child like alan did. 
     # Now its like your kicking your 30 y/old child out of the house!
     def cutOffChildren(self):
         # Move up to the parent node if possible
-        if self.current_node.parent is not None and self.current_node.parent.name is not None:
-            self.current_node = self.current_node.parent
-        else:
-            print('BIG OOF. This should never happen')
+        # if self.__current_node.parent is not None and self.__current_node.parent.name is not None:
+        self.__current_node = self.__current_node.parent
+        # else:
+        #     print('BIG OOF. This should never happen!')

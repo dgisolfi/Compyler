@@ -13,12 +13,8 @@ class Error:
         self.alert()
 
     def alert(self):
-        if self.module is 'lexer':
+        if self.module is not  'main':
            print(f"{colored(f'Error in {self.module}', 'red')}: {self.message} at line:{self.line} col:{self.pos}")
         else:
-            if self.module is 'main':
-                print(f"{colored(f'Error in {self.module}', 'red')}: {self.message}")
-            else:
-                print(f"{colored(f'Error in {self.module}', 'red')}: {self.message} at line:{self.line} col:{self.pos}")
-            # Terminate the program
+            print(f"{colored(f'Error in {self.module}', 'red')}: {self.message}")
             sys.exit()

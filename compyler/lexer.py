@@ -42,9 +42,7 @@ class Lexer:
             print(colored(f'Lex Failed for Program {self.program}. Errors: {self.errors}', 'red'))
         else:
             print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}\n', 'blue'))
-        # Reset incase of another program
-        self.warnings = 0
-        self.errors = 0
+
         
     def logToken(self, token):
         # Only log tokens if the -v flag was passed.
