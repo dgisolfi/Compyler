@@ -192,7 +192,25 @@ class Parser:
             return False
     
     def parseVarDecl(self):
-        return False
+        # Look at the next token but dont remove until we are sure this is a print statement
+        current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_TYPE'):
+            # We are sure this is a Assignment so pop the token
+            current_token = self.__tokens.pop()
+            self.logProduction('parseVarDecl()')
+            self.cst.addNode('VarDecleration', 'branch')
+            self.cst.addNode(current_token.value, 'leaf')
+            
+            current_token = self.__tokens.pop()
+            if self.match(current_token.kind, 'T_ID'):
+                self.parseId(current_token)
+                return True
+            else:
+                self.error(current_token, 'T_ID')
+        else:
+            # Not a valid decleration
+            return False
     
     def parseWhileStatement(self):
         return False
