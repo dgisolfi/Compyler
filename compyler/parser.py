@@ -264,7 +264,7 @@ class Parser:
             return False
 
     def parseIntExpr(self):
-         # Look at the next token but dont remove until we are sure this is a print statement
+        # Look at the next token but dont remove until we are sure this is a print statement
         current_token = self.__tokens[-1]
         if self.match(current_token.kind, 'T_DIGIT'):
             self.logProduction('parseIntExpr()')
@@ -273,6 +273,7 @@ class Parser:
                 if self.parseIntOp():
                     if self.parseExpr():
                        self.cst.cutOffChildren()
+                       return True
                     else:
                         self.error(current_token.value, 'Expr')
                 else:
@@ -285,7 +286,29 @@ class Parser:
             # Its not a IntEpr
             return False
     def parseStringExpr(self):
-        return False
+        # Check for quote else dis aint a string
+        current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_QUOTE'):
+            current_token = self.__tokens.pop()
+            self.logProduction('parseStringExpr()')
+            self.cst.addNode('StringExpr','branch')
+            self.cst.addNode(current_token.value, 'leaf')
+            self.cst.cutOffChildren()
+
+            if self.parseCharList():
+                
+                current_token = self.__tokens.pop()
+                if self.match(current_token.kind, 'T_QUOTE'):
+                    self.cst.addNode(current_token.value, 'leaf')
+                    self.cst.cutOffChildren()
+                    return True
+                else:
+                    self.error(self.__tokens[-1], 'T_Quote')
+            else:
+                self.error(self.__tokens[-1], 'Charlist')
+        else:
+            return False
     def parseBooleanExpr(self):
         # Check for BoolOp first
         current_token = self.__tokens[-1]
@@ -348,7 +371,20 @@ class Parser:
             return False
     
     def parseCharList(self):
-        return False
+        current_token = self.__tokens.pop()
+        self.logProduction('parseCharList()')
+        self.cst.addNode('CharList','branch')
+        self.cst.addNode(current_token.value, 'leaf') 
+
+        if self.parseChar():
+            self.cst.cutOffChildren()
+            return self.parseCharList()
+
+        else:
+            # move back up tree to get back to the branch node
+            while self.cst.current_node.name is 'CharList':
+                self.cst.cutOffChildren()
+            return True
 
     def parseType(self, type_token):
         self.logProduction('parseType()')
@@ -358,7 +394,19 @@ class Parser:
         self.cst.cutOffChildren()
 
     def parseChar(self):
-        return False
+        current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_CHAR'):
+            current_token = self.__tokens.pop()
+            self.logProduction('parseChar()')
+            print(current_token.value)
+            self.cst.addNode('char', 'branch')
+            self.cst.addNode(current_token.value,'leaf')
+            # go back to parent node
+            self.cst.cutOffChildren()
+        else:
+            # Not a char
+            return False
 
     def parseSpace(self):
         return False
