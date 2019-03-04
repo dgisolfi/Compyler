@@ -200,7 +200,7 @@ class Parser:
             current_token = self.__tokens.pop()
             self.logProduction('parseVarDecl()')
             self.cst.addNode('VarDecleration', 'branch')
-            self.cst.addNode(current_token.value, 'leaf')
+            self.parseType(current_token)
             
             current_token = self.__tokens.pop()
             if self.match(current_token.kind, 'T_ID'):
@@ -230,32 +230,58 @@ class Parser:
             return True
 
         # New Expr INT, BOOL or String
-        elif self.parseIntExpr()  or self.parseBooleanExpr() or self.parseStringExpr():
+        elif self.parseIntExpr() or self.parseBooleanExpr() or self.parseStringExpr():
             self.cst.cutOffChildren()
             return True
         else:
             return False
 
     def parseIntExpr(self):
-        return False
+         # Look at the next token but dont remove until we are sure this is a print statement
+        current_token = self.__tokens[-1]
+        
+        if self.match(current_token.kind, 'T_DIGIT'):
+            self.logProduction('parseIntExpr()')
+            self.cst.addNode('IntExpr','branch')
+            if self.parseDigit():
+                if self.parseIntOp():
+                    if self.parseExpr():
+                       self.cst.cutOffChildren()
+                       return True
+                    else:
+                        self.error(current_token.value, 'Expr')
+                else:
+                    # this is valid => a = 3
+                    return True
+            else:
+                self.error(current_token.value,'T_DIGIT')
+
+        else:
+            # Its not a IntEpr
+            return False
     def parseStringExpr(self):
         return False
     def parseBooleanExpr(self):
         return False
 
     def parseId(self, id_token):
+        # We dont need to check for char as 
+        # the lexer already took care of that
         self.logProduction('parseId()')
-        self.cst.addNode('ID', 'branch')
+        self.cst.addNode('Id', 'branch')
         self.cst.addNode(id_token.value,'leaf')
         # go back to parent node
         self.cst.cutOffChildren()
-        return False
     
     def parseCharList(self):
         return False
 
-    def parseType(self):
-        return False
+    def parseType(self, type_token):
+        self.logProduction('parseType()')
+        self.cst.addNode('Type', 'branch')
+        self.cst.addNode(type_token.value,'leaf')
+        # go back to parent node
+        self.cst.cutOffChildren()
 
     def parseChar(self):
         return False
@@ -264,11 +290,29 @@ class Parser:
         return False
 
     def parseDigit(self):
-        return False
+        self.logProduction('parseDigit()')
+        current_token = self.__tokens.pop()
+        if self.match(current_token.kind, 'T_DIGIT'):
+            self.cst.addNode('digit', 'branch')
+            self.cst.addNode(current_token.value,'leaf')
+            # go back to parent node
+            self.cst.cutOffChildren()
+            return True
+        else:
+            return False
 
     def parseBoolOp(self):
         return False
     def parseBoolVal(self):
         return False
     def parseIntOp(self):
-        return False
+        current_token = self.__tokens.pop()
+
+        if self.match(current_token.kind, 'T_ADDITION_OP'):
+            self.cst.addNode('IntOP','branch')
+            self.cst.addNode(current_token.value,'leaf')
+            self.cst.cutOffChildren()
+            return True
+        else:
+    
+            return False
