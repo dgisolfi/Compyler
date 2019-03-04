@@ -114,7 +114,7 @@ class Parser:
 
         # Check all possible statements
         if self.parseBlock() or self.parsePrintStatement() or (self.parseAssignmentStatement() 
-        or self.parseVarDecl() or self.parseWhileStatement()):
+        or self.parseIfStatement() or self.parseVarDecl() or self.parseWhileStatement()):
             self.cst.cutOffChildren()
             return True
         else:
@@ -212,7 +212,18 @@ class Parser:
         return False
 
     def parseIfStatement(self):
-        return False
+        current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_IF'):
+            current_token = self.__tokens.pop()
+            self.logProduction('parseIfStatement()')
+            self.cst.addNode('IfStatement', 'branch')
+
+            if self.parseBoolVal(): #or parseBooleanExpr():
+                return True
+
+        else:
+            return False
 
     # Expressions
     def parseExpr(self):
@@ -298,8 +309,19 @@ class Parser:
 
     def parseBoolOp(self):
         return False
+
     def parseBoolVal(self):
-        return False
+        current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_BOOLEAN'):
+            current_token = self.__tokens.pop()
+            self.logProduction('parseBoolVal()')
+            self.cst.addNode('BoolvalExpression', 'branch')
+            self.cst.addNode(current_token.value, 'leaf')
+            self.cst.cutOffChildren()
+        else:
+            return False
+
     def parseIntOp(self):
         current_token = self.__tokens[-1]
 
