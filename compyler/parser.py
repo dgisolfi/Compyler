@@ -7,17 +7,13 @@ from termcolor import colored
 # from tree import Tree
 class Parser:
     def __init__(self, tokens, verbose, program):
+        # Reverses tokens so I can use pop
         self.__tokens = tokens[::-1]
-
         self.cst = Tree()
         self.verbose = verbose
         self.warnings = 0
         self.errors = 0
-        self.program = program
-        # self.productions = self.createProductions()
-
-        # self.productions.get('Statement')['T_PRINT']()
-     
+        self.program = program     
         self.parse()
 
     # Check if the current token is an appropriate token for the scope
@@ -55,31 +51,47 @@ class Parser:
         self.logProduction('parse()')
         self.cst.addNode('parse', 'branch')
         
-        current_token = self.__tokens.pop()
-        
+        # The most basic program is <block>$, 
+        # so check for block and then $
+        if self.parseBlock():
+            
+            current_token = self.__tokens.pop()
+            if self.match(current_token.kind, 'T_EOP'):
+                self.cst.cutOffChildren()
+                self.cst.addNode(current_token.value, 'leaf')
+                # We finished with 0 errors, exit safely now.
+                self.exit()
+            else:
+                self.error(current_token, 'T_EOP')
+
+    
+    def parseBlock(self):
+        # Look at the next token but dont remove until we are sure this is a print statement
+        current_token = self.__tokens[-1]
+        # Match open brace of block
         if self.match(current_token.kind, 'T_LEFT_BRACE'):
+            # Actually remove it now
+            current_token = self.__tokens.pop()
+            # New Block
+            self.logProduction('parseBlock()')
             self.cst.addNode('Block', 'branch')
             self.cst.addNode(current_token.value, 'leaf')
 
-            if self.parseStatementList():
+            # Check the contents of the block
+            if self.parseStatementList(): 
+                # There better be a right brace to close this block
                 current_token = self.__tokens.pop()
-                
                 if self.match(current_token.kind, 'T_RIGHT_BRACE'):
                     self.cst.addNode(current_token.value, 'leaf')
-                    current_token = self.__tokens.pop()
-
-                    if self.match(current_token.kind, 'T_EOP'):
-                        self.cst.cutOffChildren()
-                        self.cst.addNode(current_token.value, 'leaf')
-                        # We finished with 0 errors, exit safely now.
-                        self.exit()
-                    else:
-                        self.error(current_token, 'T_EOP')
                 else:
-                    self.error(current_token, 'T_RIGHT_BRACE') 
-        else:
-            self.error(current_token, 'T_LEFT_BRACE') 
+                    self.error(current_token, '}')
+                    return False
 
+            # This is a valid block
+            return True
+        else:
+            # No block detected, move on
+            return False
 
  
     def parseStatementList(self):
@@ -114,35 +126,6 @@ class Parser:
             return False
         
 
-    def parseBlock(self):
-        # Look at the next token but dont remove until we are sure this is a print statement
-        current_token = self.__tokens[-1]
-        
-        # Match open brace of block
-        if self.match(current_token.kind, 'T_LEFT_BRACE'):
-            # Actually remove it now
-            current_token = self.__tokens.pop()
-            # New Block
-            self.logProduction('parseBlock()')
-            self.cst.addNode('Block', 'branch')
-            self.cst.addNode(current_token.value, 'leaf')
-
-            # Check the contents of the block
-            if self.parseStatementList(): 
-                # There better be a right brace to close this block
-                current_token = self.__tokens.pop()
-                if self.match(current_token.kind, 'T_RIGHT_BRACE'):
-                    self.cst.addNode(current_token.value, 'leaf')
-                else:
-                    self.error(current_token, '}')
-
-            # We still in this block
-            return True
-        else:
-            # No block detected, move on
-            return False
-            
-
     # All possible statements 
     def parsePrintStatement(self):
         # Look at the next token but dont remove until we are sure this is a print statement
@@ -161,7 +144,6 @@ class Parser:
             # The next token better be a open paren
             if self.match(current_token.kind, 'T_LEFT_PAREN'):
                 self.cst.addNode(current_token.value, 'leaf')
-                print(self.cst)
                 # Check for expr inside parens
                 if self.parseExpr():
                     self.cst.cutOffChildren()
@@ -170,17 +152,44 @@ class Parser:
                     current_token = self.__tokens.pop()
                     if self.match(current_token.kind, 'T_RIGHT_PAREN'):
                         self.cst.addNode(current_token.value, 'leaf')
+                        return True
                     else:
                         self.error(current_token, 'T_RIGHT_PAREN')
                 else:
-                    self.error(current_token, 'EXPR')
+                    self.error(current_token, 'Expr')
             else:
                 self.error(current_token, 'T_LEFT_PAREN')
         else:
             return False
 
     def parseAssignmentStatement(self):
-        return False
+        # Look at the next token but dont remove until we are sure this is a print statement
+        current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_ID'):
+            # We are sure this is a Assignment so pop the token
+            current_token = self.__tokens.pop()
+            self.logProduction('parseAssignmentStatement()')
+            self.cst.addNode('AssignmentStatement', 'branch')
+            self.parseId(current_token)
+           
+            current_token = self.__tokens.pop()
+            # Now look for the actual '='
+            if self.match(current_token.kind, 'T_ASSIGN_OP'):
+                self.cst.addNode(current_token.value, 'leaf')
+
+                # Finally validate what the ID is being assigned to
+                if self.parseExpr():
+                    self.cst.cutOffChildren()
+                    return True
+                else:
+                    self.error(current_token, 'Expr')
+            else:
+                self.error(current_token, 'T_ASSIGN_OP')
+        else:
+            # Not an Assignment statement or not 
+            # valid(didnt start with a ID)
+            return False
     
     def parseVarDecl(self):
         return False
@@ -192,16 +201,36 @@ class Parser:
         return False
 
     # Expressions
-
     def parseExpr(self):
-        return True
+        self.logProduction('parseExpr()')
+        self.cst.addNode('Expr','branch')
+        current_token = self.__tokens.pop()
+
+        if self.match(current_token.kind, 'T_ID'):
+            # New Expr ID
+            self.parseId(current_token)
+            return True
+
+        # New Expr INT, BOOL or String
+        elif self.parseIntExpr()  or self.parseBooleanExpr() or self.parseStringExpr():
+            self.cst.cutOffChildren()
+            return True
+        else:
+            return False
+
     def parseIntExpr(self):
         return False
     def parseStringExpr(self):
         return False
     def parseBooleanExpr(self):
         return False
-    def parseId(self):
+
+    def parseId(self, id_token):
+        self.logProduction('parseId()')
+        self.cst.addNode('ID', 'branch')
+        self.cst.addNode(id_token.value,'leaf')
+        # go back to parent node
+        self.cst.cutOffChildren()
         return False
     
     def parseCharList(self):
@@ -225,28 +254,3 @@ class Parser:
         return False
     def parseIntOp(self):
         return False
-
-
-    # def createProductions(self):
-    #     productions = {}
-
-    #     statements = []
-    #     statements.append({'T_PRINT':self.parsePrintStatement})
-    #     statements.append({'T_ASSIGNMENT_OP':self.parseAssignmentStatement})
-    #     statements.append({'T_TYPE':self.parseVarDecl})
-    #     statements.append({'T_WHILE':self.parseWhileStatement})
-    #     statements.append({'T_IF':self.parseIfStatement})
-    #     statements.append({'T_LEFT_BRACE':self.parseBlock})
-
-    #     expr = []
-    #     expr.append({'T_INT':self.parseIntExpr})
-    #     expr.append({'T_QUOTE':self.parseStringExpr})
-    #     expr.append({'T_BOOLEAN':self.parseBooleanExpr})
-    #     expr.append({'T_ID':self.parseId})
-
-    #     productions['Statement'] = statements
-    #     productions['Expr'] = expr
-    #     return productions
-
-    
-    
