@@ -80,7 +80,7 @@ class Lexer:
                 elif re.match(lexemes['ASSIGN_OP']['pattern'], char):
                     next = self.code[self.cur_pos+1]
                     if re.match(lexemes['ASSIGN_OP']['pattern'], next):
-                        token = Token('EQUALITY_OP', '==', self.line, self.col)
+                        token = Token('BOOL_OP', '==', self.line, self.col)
                         self.__tokens.append(token)
                         self.logToken(token)
                         self.cur_pos += 1
@@ -93,7 +93,7 @@ class Lexer:
                 elif re.match(r'^!$', char):
                     next = self.code[self.cur_pos+1]
                     if re.match(lexemes['ASSIGN_OP']['pattern'], next):
-                        token = Token('INEQUALITY_OP', '!=', self.line, self.col)
+                        token = Token('BOOL_OP', '!=', self.line, self.col)
                         self.__tokens.append(token)
                         self.logToken(token)
                         self.cur_pos += 1

@@ -85,14 +85,12 @@ class Parser:
                 else:
                     self.error(current_token, '}')
                     return False
-
             # This is a valid block
             return True
         else:
             # No block detected, move on
             return False
 
- 
     def parseStatementList(self):
         self.logProduction('parseStatementList()')
         self.cst.addNode('StatementList', 'branch')
@@ -104,7 +102,6 @@ class Parser:
         else:
             while self.cst.current_node.name is 'StatementList':
                 self.cst.cutOffChildren()
-
             # Epsilon
             return True
 
@@ -121,7 +118,6 @@ class Parser:
             # Remove the Statement branch node we didnt need it
             self.cst.delCurNode()
             return False
-        
 
     # All possible statements 
     def parsePrintStatement(self):
@@ -199,8 +195,7 @@ class Parser:
             self.parseType(current_token)
             
             current_token = self.__tokens[-1]
-            if self.match(current_token.kind, 'T_ID'):
-                self.parseId()
+            if self.parseId():
                 return True
             else:
                 self.error(current_token, 'T_ID')
@@ -209,7 +204,25 @@ class Parser:
             return False
     
     def parseWhileStatement(self):
-        return False
+        current_token = self.__tokens[-1]
+        
+        if self.match(current_token.kind, 'T_WHILE'):
+            current_token = self.__tokens.pop()
+            self.logProduction('parseWhileStatement()')
+            self.cst.addNode('WhileStatement', 'branch')
+
+            if self.parseBooleanExpr(): 
+                if self.parseBlock():
+                    self.cst.cutOffChildren()
+                    return True
+                else:
+                    self.error(self.__tokens[-1], 'T_LEFT_BRACE')
+                    return False
+            else:
+                self.error(self.__tokens[-1], 'BooleanExpr')
+                return False
+        else:
+            return False
 
     def parseIfStatement(self):
         current_token = self.__tokens[-1]
@@ -238,9 +251,9 @@ class Parser:
         self.cst.addNode('Expr','branch')
         current_token = self.__tokens[-1]
 
-        if self.match(current_token.kind, 'T_ID'):
+        print(current_token.value)
+        if self.parseId():
             # New Expr ID
-            self.parseId()
             return True
 
         # New Expr INT, BOOL or String
@@ -285,19 +298,54 @@ class Parser:
             self.cst.cutOffChildren()
             return True
         elif self.match(current_token.kind, 'T_LEFT_PAREN'):
-            pass
+            current_token = self.__tokens.pop()
+            self.logProduction('parseBooleanExpr()')
+            self.cst.addNode('BooleanExpr','branch')
+            self.cst.addNode(current_token.value,'leaf')
+
+            if self.parseExpr():
+                self.cst.cutOffChildren()
+                current_token = self.__tokens.pop()
+                print(current_token.value, current_token.kind)
+                if self.match(current_token.kind, 'T_BOOL_OP'):
+                    self.cst.addNode('BoolOp','branch')
+                    self.cst.addNode(current_token.value,'leaf')
+                    self.cst.cutOffChildren()
+
+                    if self.parseExpr():
+                        self.cst.cutOffChildren()
+                        current_token = self.__tokens.pop()
+                        if self.match(current_token.kind, 'T_RIGHT_PAREN'):
+                            self.cst.addNode(current_token.value,'leaf')
+                            self.cst.cutOffChildren()
+                            return True
+                        else:
+                            self.error(current_token, 'T_RIGHT_PAREN')
+                    else:
+                        self.error(current_token, 'Expr')
+                else:
+                    self.error(current_token, 'T_BOOL_OP')
+            else:
+                self.error(current_token, 'Expr')
         else:
+            # Not a valid BoolExpr
             return False
 
     def parseId(self):
-        current_token = self.__tokens.pop()
-        # We dont need to check for char as 
-        # the lexer already took care of that
-        self.logProduction('parseId()')
-        self.cst.addNode('Id', 'branch')
-        self.cst.addNode(current_token.value,'leaf')
-        # go back to parent node
-        self.cst.cutOffChildren()
+        current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_ID'):
+            current_token = self.__tokens.pop()
+            # We dont need to check for char as 
+            # the lexer already took care of that
+            self.logProduction('parseId()')
+            self.cst.addNode('Id', 'branch')
+            self.cst.addNode(current_token.value,'leaf')
+            # go back to parent node
+            self.cst.cutOffChildren()
+            return True
+        else:
+            return False
     
     def parseCharList(self):
         return False
