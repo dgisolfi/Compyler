@@ -19,7 +19,6 @@ class Parser:
     # Check if the current token is an appropriate token for the scope
     def match(self, current_token, expected_tokens):
         retval = False
-        # print(current_token, expected_tokens)
         if current_token in expected_tokens:
             retval = True
         return retval
@@ -103,9 +102,7 @@ class Parser:
             self.cst.cutOffChildren()
             return self.parseStatementList()
         else:
-            # print(f'NAME:{self.cst.current_node.name}')
             while self.cst.current_node.name is 'StatementList':
-                # print(f'NAME:{self.cst.current_node.name}')
                 self.cst.cutOffChildren()
 
             # Epsilon
@@ -168,10 +165,9 @@ class Parser:
 
         if self.match(current_token.kind, 'T_ID'):
             # We are sure this is a Assignment so pop the token
-            current_token = self.__tokens.pop()
             self.logProduction('parseAssignmentStatement()')
             self.cst.addNode('AssignmentStatement', 'branch')
-            self.parseId(current_token)
+            self.parseId()
            
             current_token = self.__tokens.pop()
             # Now look for the actual '='
@@ -202,9 +198,9 @@ class Parser:
             self.cst.addNode('VarDecleration', 'branch')
             self.parseType(current_token)
             
-            current_token = self.__tokens.pop()
+            current_token = self.__tokens[-1]
             if self.match(current_token.kind, 'T_ID'):
-                self.parseId(current_token)
+                self.parseId()
                 return True
             else:
                 self.error(current_token, 'T_ID')
@@ -222,11 +218,11 @@ class Parser:
     def parseExpr(self):
         self.logProduction('parseExpr()')
         self.cst.addNode('Expr','branch')
-        current_token = self.__tokens.pop()
+        current_token = self.__tokens[-1]
 
         if self.match(current_token.kind, 'T_ID'):
             # New Expr ID
-            self.parseId(current_token)
+            self.parseId()
             return True
 
         # New Expr INT, BOOL or String
@@ -239,7 +235,6 @@ class Parser:
     def parseIntExpr(self):
          # Look at the next token but dont remove until we are sure this is a print statement
         current_token = self.__tokens[-1]
-        
         if self.match(current_token.kind, 'T_DIGIT'):
             self.logProduction('parseIntExpr()')
             self.cst.addNode('IntExpr','branch')
@@ -247,7 +242,6 @@ class Parser:
                 if self.parseIntOp():
                     if self.parseExpr():
                        self.cst.cutOffChildren()
-                       return True
                     else:
                         self.error(current_token.value, 'Expr')
                 else:
@@ -255,7 +249,7 @@ class Parser:
                     return True
             else:
                 self.error(current_token.value,'T_DIGIT')
-
+                
         else:
             # Its not a IntEpr
             return False
@@ -264,12 +258,13 @@ class Parser:
     def parseBooleanExpr(self):
         return False
 
-    def parseId(self, id_token):
+    def parseId(self):
+        current_token = self.__tokens.pop()
         # We dont need to check for char as 
         # the lexer already took care of that
         self.logProduction('parseId()')
         self.cst.addNode('Id', 'branch')
-        self.cst.addNode(id_token.value,'leaf')
+        self.cst.addNode(current_token.value,'leaf')
         # go back to parent node
         self.cst.cutOffChildren()
     
@@ -306,13 +301,13 @@ class Parser:
     def parseBoolVal(self):
         return False
     def parseIntOp(self):
-        current_token = self.__tokens.pop()
+        current_token = self.__tokens[-1]
 
         if self.match(current_token.kind, 'T_ADDITION_OP'):
+            current_token = self.__tokens.pop()
             self.cst.addNode('IntOP','branch')
             self.cst.addNode(current_token.value,'leaf')
             self.cst.cutOffChildren()
             return True
         else:
-    
             return False
