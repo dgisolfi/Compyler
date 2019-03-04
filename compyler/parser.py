@@ -213,15 +213,22 @@ class Parser:
 
     def parseIfStatement(self):
         current_token = self.__tokens[-1]
-
+        
         if self.match(current_token.kind, 'T_IF'):
             current_token = self.__tokens.pop()
             self.logProduction('parseIfStatement()')
             self.cst.addNode('IfStatement', 'branch')
 
-            if self.parseBoolVal(): #or parseBooleanExpr():
-                return True
-
+            if self.parseBooleanExpr(): 
+                if self.parseBlock():
+                    self.cst.cutOffChildren()
+                    return True
+                else:
+                    self.error(self.__tokens[-1], 'T_LEFT_BRACE')
+                    return False
+            else:
+                self.error(self.__tokens[-1], 'BooleanExpr')
+                return False
         else:
             return False
 
@@ -267,7 +274,20 @@ class Parser:
     def parseStringExpr(self):
         return False
     def parseBooleanExpr(self):
-        return False
+        # Check for BoolOp first
+        current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_BOOLEAN'):
+            self.logProduction('parseBooleanExpr()')
+            self.cst.addNode('BooleanExpr','branch')
+            self.parseBoolVal()
+            # Move back up to get block
+            self.cst.cutOffChildren()
+            return True
+        elif self.match(current_token.kind, 'T_LEFT_PAREN'):
+            pass
+        else:
+            return False
 
     def parseId(self):
         current_token = self.__tokens.pop()
@@ -316,9 +336,10 @@ class Parser:
         if self.match(current_token.kind, 'T_BOOLEAN'):
             current_token = self.__tokens.pop()
             self.logProduction('parseBoolVal()')
-            self.cst.addNode('BoolvalExpression', 'branch')
+            self.cst.addNode('BoolVal', 'branch')
             self.cst.addNode(current_token.value, 'leaf')
             self.cst.cutOffChildren()
+            return True
         else:
             return False
 
