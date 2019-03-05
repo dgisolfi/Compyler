@@ -301,7 +301,8 @@ class Parser:
             self.logProduction('parseStringExpr()')
             self.cst.addNode('StringExpr','branch')
             self.cst.addNode(current_token.value, 'leaf')
-            # self.cst.cutOffChildren()
+            self.cst.addNode('CharList','branch')
+           
                 
             if self.parseCharList():
                 current_token = self.__tokens.pop()
@@ -374,7 +375,6 @@ class Parser:
     
     def parseCharList(self):
         self.logProduction('parseCharList()')
-        self.cst.addNode('CharList','branch')
 
         if self.parseChar():
             self.cst.cutOffChildren()

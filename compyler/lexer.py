@@ -43,10 +43,17 @@ class Lexer:
         else:
             print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}\n', 'blue'))
 
+    def logError(self, msg, line, col):
+        if self.errors is 0:
+            self.errors += 1
+            Error('Lexer', msg, line, col)
+            self.cur_pos = len(self.code)+1
+        
+        self.programExit()
         
     def logToken(self, token):
         # Only log tokens if the -v flag was passed.
-        if self.verbose:
+        if self.verbose and self.errors is 0:
             print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} column {token.position}', 'cyan'))
 
     def lex(self):
@@ -108,8 +115,7 @@ class Lexer:
                 
                 else:
                     self.errors += 1
-                    Error('Lexer', f'Character: [ {repr(char)} ] is not valid in this grammer.', self.line, self.col)
-                
+                    self.logError(f'Character: [ {repr(char)} ] is not valid in this grammer.', self.line, self.col)
                 
                 self.cur_pos += 1
                 self.col += 1
@@ -117,8 +123,6 @@ class Lexer:
             else:
                 self.cur_pos += 1
                 self.col += 1
-
-        return self.__tokens
             
 
     def consumeBuffer(self, buffer):
@@ -170,9 +174,9 @@ class Lexer:
             else:
                 # Check foor invalid types! otherwise make a token for the valid chars
                 if not re.match(r'^[a-z\s]$', char) or re.match(r'\n', char):
-                    self.errors += 1
-                    Error('Lexer', f'Character list contains invalid character: [ {repr(char)} ]. It can only contain lowercase letters and spaces.', 
+                    self.logError(f'Character list contains invalid character: [ {repr(char)} ]. It can only contain lowercase letters and spaces.',
                     self.line, self.col)
+                    end_found = True
                 else:
                     token = Token('CHAR', char, self.line, self.col)
                     self.__tokens.append(token)
