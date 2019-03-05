@@ -71,13 +71,14 @@ def main(path, verbose):
             # print(tokens)
             # Parse the tokens
             parse = Parser(tokens,verbose, program+1)
-            print(parse.cst)
-            # for node in parse.cst.:
-            #     print(node.name)
+           
+
             if parse.errors is not 0:
-                # print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed', 'blue'))
+                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed', 'blue'))
                 program += 1
                 continue
+            else:
+                print(parse.cst)
             
            
             program += 1

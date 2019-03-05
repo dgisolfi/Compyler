@@ -16,9 +16,9 @@ class Tree:
         return str(self)
 
     def __str__(self):
-        self.traverse(self.__root, 0)
-        print(self.__tree)
-        # pptree.print_tree(self.__root)
+        # self.traverse(self.__root, 0)
+        # print(self.__tree)
+        pptree.print_tree(self.__root)
         return ''
 
     @property

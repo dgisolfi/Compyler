@@ -31,7 +31,7 @@ class Parser:
             token.line, token.position)
             self.errors += 1
             # Get outta here this program is not Alan++ Compliant
-            self.exit()
+            # self.exit()
 
     def exit(self):
         # Fail the Parser if there were any errors
@@ -41,7 +41,7 @@ class Parser:
             print(colored(f'Parse Completed for Program {self.program}.\n', 'blue'))
 
     def logProduction(self, fn):
-        if self.verbose:
+        if self.verbose and self.errors is 0:
             print(colored(f'PARSER ❯ {fn}', 'green'))
     
     ''' All productions to preform "derivations" '''
@@ -50,10 +50,16 @@ class Parser:
         print(colored(f'Parsing Program {self.program}', 'blue'))
         self.logProduction('parse()')
         self.cst.addNode('program', 'branch')
+
+        # This is grabbing the first token but not removing it, 
+        # this is so if the first '{' is left out we can say what was 
+        # in its place
+        current_token = self.__tokens[-1]
         
         # The most basic program is <block>$, 
         # so check for block and then $
         if self.parseBlock():
+            
             
             current_token = self.__tokens.pop()
             if self.match(current_token.kind, 'T_EOP'):
@@ -62,7 +68,9 @@ class Parser:
                 # We finished with 0 errors, exit safely now.
                 self.exit()
             else:
-                self.error(current_token, 'T_EOP')
+                self.error(current_token, '$')
+        else:
+            self.error(current_token, '{')
 
     
     def parseBlock(self):
@@ -148,11 +156,11 @@ class Parser:
                         self.cst.addNode(current_token.value, 'leaf')
                         return True
                     else:
-                        self.error(current_token, 'T_RIGHT_PAREN')
+                        self.error(current_token, ')')
                 else:
-                    self.error(current_token, 'Expr')
+                    self.error(current_token, 'ID, Int, String, or Boolean')
             else:
-                self.error(current_token, 'T_LEFT_PAREN')
+                self.error(current_token, '(')
         else:
             return False
 
@@ -176,7 +184,7 @@ class Parser:
                     self.cst.cutOffChildren()
                     return True
                 else:
-                    self.error(current_token, 'Expr')
+                    self.error(current_token, 'ID, Int, String, or Boolean')
             else:
                 self.error(current_token, '=') # T_ASSIGN_OP
         else:
@@ -199,7 +207,7 @@ class Parser:
             if self.parseId():
                 return True
             else:
-                self.error(current_token, 'T_ID')
+                self.error(current_token, 'ID')
         else:
             # Not a valid decleration
             return False
@@ -217,7 +225,7 @@ class Parser:
                     self.cst.cutOffChildren()
                     return True
                 else:
-                    self.error(self.__tokens[-1], 'T_LEFT_BRACE')
+                    self.error(self.__tokens[-1], '{')
                     return False
             else:
                 self.error(self.__tokens[-1], 'BooleanExpr')
@@ -274,12 +282,12 @@ class Parser:
                        self.cst.cutOffChildren()
                        return True
                     else:
-                        self.error(current_token.value, 'Expr')
+                        self.error(current_token, 'Expr')
                 else:
                     # this is valid => a = 3
                     return True
             else:
-                self.error(current_token.value,'T_DIGIT')
+                self.error(current_token,'T_DIGIT')
                 
         else:
             # Its not a IntEpr
@@ -327,13 +335,8 @@ class Parser:
 
             if self.parseExpr():
                 self.cst.cutOffChildren()
-                current_token = self.__tokens.pop()
                 
-                if self.match(current_token.kind, 'T_BOOL_OP'):
-                    self.cst.addNode('BoolOp','branch')
-                    self.cst.addNode(current_token.value,'leaf')
-                    self.cst.cutOffChildren()
-
+                if self.parseBoolOp():
                     if self.parseExpr():
                         self.cst.cutOffChildren()
                         current_token = self.__tokens.pop()
@@ -342,11 +345,11 @@ class Parser:
                             self.cst.cutOffChildren()
                             return True
                         else:
-                            self.error(current_token, 'T_RIGHT_PAREN')
+                            self.error(current_token, ')')
                     else:
                         self.error(current_token, 'Expr')
                 else:
-                    self.error(current_token, 'T_BOOL_OP')
+                    self.error(current_token, '== or !=')
             else:
                 self.error(current_token, 'Expr')
         else:
@@ -391,8 +394,7 @@ class Parser:
 
     def parseChar(self):
         current_token = self.__tokens[-1]
-        print(current_token.value)
-
+        
         if self.match(current_token.kind, 'T_CHAR'):
             current_token = self.__tokens.pop()
             self.logProduction('parseChar()')
@@ -403,7 +405,6 @@ class Parser:
             return True
         else:
             # Not a char
-            print('char: ' + current_token.value)
             return False
 
     def parseDigit(self):
@@ -419,7 +420,17 @@ class Parser:
             return False
 
     def parseBoolOp(self):
-        return False
+        current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_BOOL_OP'):
+            current_token = self.__tokens.pop()
+            self.logProduction('parseBoolOp()')
+            self.cst.addNode('BoolOp','branch')
+            self.cst.addNode(current_token.value,'leaf')
+            self.cst.cutOffChildren()
+            return True
+        else:
+            return False
 
     def parseBoolVal(self):
         current_token = self.__tokens[-1]
