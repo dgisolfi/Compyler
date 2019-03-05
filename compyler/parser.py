@@ -26,18 +26,19 @@ class Parser:
     # This handles all error messages
     # as it was getting messy inside of function
     def error(self, token, expected):
-        Error('Parser', f'Expected {expected} found {token.value}', 
-        token.line, token.position)
-        self.errors += 1
-        # Get outta here this program is not Alan++ Compliant
-        self.exit()
+        if self.errors is 0:
+            Error('Parser', f'Expected [ {expected} ] found [ {token.value} ]', 
+            token.line, token.position)
+            self.errors += 1
+            # Get outta here this program is not Alan++ Compliant
+            self.exit()
 
     def exit(self):
         # Fail the Parser if there were any errors
         if self.errors > 0:
-            print(colored(f'Parse Failed for Program {self.program}. Errors: {self.errors}\n', 'red'))
+            print(colored(f'Parse Failed for Program {self.program}.\n', 'red'))
         else:
-            print(colored(f'Parse Completed for Program {self.program}. Errors: {self.errors}\n', 'blue'))
+            print(colored(f'Parse Completed for Program {self.program}.\n', 'blue'))
 
     def logProduction(self, fn):
         if self.verbose:
@@ -48,7 +49,7 @@ class Parser:
     def parse(self):
         print(colored(f'Parsing Program {self.program}', 'blue'))
         self.logProduction('parse()')
-        self.cst.addNode('parse', 'branch')
+        self.cst.addNode('program', 'branch')
         
         # The most basic program is <block>$, 
         # so check for block and then $
@@ -177,7 +178,7 @@ class Parser:
                 else:
                     self.error(current_token, 'Expr')
             else:
-                self.error(current_token, 'T_ASSIGN_OP')
+                self.error(current_token, '=') # T_ASSIGN_OP
         else:
             # Not an Assignment statement or not 
             # valid(didnt start with a ID)
@@ -298,7 +299,7 @@ class Parser:
 
             if self.parseCharList():
                 print(current_token.value)
-                # current_token = self.__tokens.pop()
+                current_token = self.__tokens.pop()
                 if self.match(current_token.kind, 'T_QUOTE'):
                     self.cst.addNode(current_token.value, 'leaf')
                     self.cst.cutOffChildren()
@@ -394,7 +395,7 @@ class Parser:
 
     def parseChar(self):
         current_token = self.__tokens[-1]
-        print('char: ' + current_token.value)
+        
         if self.match(current_token.kind, 'T_CHAR'):
             current_token = self.__tokens.pop()
             self.logProduction('parseChar()')
@@ -405,10 +406,8 @@ class Parser:
             return True
         else:
             # Not a char
+            print('char: ' + current_token.value)
             return False
-
-    def parseSpace(self):
-        return False
 
     def parseDigit(self):
         self.logProduction('parseDigit()')
