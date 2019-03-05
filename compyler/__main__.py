@@ -12,12 +12,7 @@ from error import Error
 from lexer import Lexer
 from parser import Parser
 
-# @click.command()
-# @click.argument('path')
-# @click.option(
-#     '--verbose', '-v', is_flag=True,
-#     help='Will provide details on the steps the compiler is taking.'
-# )
+
 
 
 # Remove those pesky comments before even lexing
@@ -30,6 +25,14 @@ def replaceTabs(code):
     code = re.sub(r'\t', '   ', code)
     return code
 
+
+
+@click.command()
+@click.argument('path', type=click.Path())
+@click.option(
+    '--verbose', '-v', is_flag=True,
+    help='Will provide details on the steps the compiler is taking.'
+)
 def main(path, verbose):
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
     # Gotta include the emoji just because Alan said not to
@@ -40,7 +43,7 @@ def main(path, verbose):
     # Remove all Comments and replace tab characters
     source_code = removeComments(source_code)
     source_code = replaceTabs(source_code)
-   
+    
     programs = source_code.split('$')
 
     try:
@@ -48,14 +51,14 @@ def main(path, verbose):
         # print(programs)
         # Check if this is the last program
         if programs[(len(programs)-1)] is '':
-                programs[(len(programs)-2)] += '$'
-                del programs[(len(programs)-1)]
+            programs[(len(programs)-2)] += '$'
+            del programs[(len(programs)-1)]
 
         while program <= (len(programs)-1):
             code = programs[program]
             
             # Add the dollar sign back to the program
-            if program is not (len(programs)-1) :
+            if program is not (len(programs)-1):
                 code += '$'
            
             # Begin Lexing(add one to the program count 
@@ -63,27 +66,25 @@ def main(path, verbose):
             # to be accessed at 0)
             lex = Lexer(code, verbose, program+1)
             if lex.errors is not 0:
-                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed', 'blue'))
+                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed\n', 'blue'))
                 program += 1
                 continue
 
             tokens = lex.tokens
-            # print(tokens)
             # Parse the tokens
             parse = Parser(tokens,verbose, program+1)
            
-
             if parse.errors is not 0:
-                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed', 'blue'))
+                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'blue'))
                 program += 1
                 continue
-            else:
+
+            if verbose:
                 print(parse.cst)
             
            
             program += 1
            
-       
     
     except KeyboardInterrupt:
         print(colored('KeyboardInterrupt', 'red'))
@@ -98,21 +99,21 @@ def getFile(file):
         Error('main', f'File: {file} could not be opened please ensure the path is correct or use and absolute path')
 
 
-def getArgs():
-    verbose = False
-    if len(sys.argv) is 1:
-        Error('main', f'Missing argument "PATH".')
-    elif sys.argv[1] == '-v':
-        verbose = True
-        if sys.argv[2] is not '':
-            path = sys.argv[2]
-        else:
-            Error('main', f'Missing argument "PATH".')
-    elif sys.argv[1] is not '':
-        path = sys.argv[1]
+# def getArgs():
+#     verbose = False
+#     if len(sys.argv) is 1:
+#         Error('main', f'Missing argument "PATH".')
+#     elif sys.argv[1] == '-v':
+#         verbose = True
+#         if sys.argv[2] is not '':
+#             path = sys.argv[2]
+#         else:
+#             Error('main', f'Missing argument "PATH".')
+#     elif sys.argv[1] is not '':
+#         path = sys.argv[1]
     
-    main(path, verbose)
+#     main(path, verbose)
 
 
 if __name__ == "__main__":
-    getArgs()
+    main()

@@ -16,9 +16,9 @@ class Tree:
         return str(self)
 
     def __str__(self):
-        # self.traverse(self.__root, 0)
-        # print(self.__tree)
-        pptree.print_tree(self.__root)
+        self.traverse(self.__root, 0)
+        print(self.__tree)
+        # pptree.print_tree(self.__root)
         return ''
 
     @property
@@ -69,7 +69,7 @@ class Tree:
     # Now its like your kicking your 30 y/old child out of the house!
     def cutOffChildren(self):
         # Move up to the parent node if possible
-        # if self.__current_node.parent is not None and self.__current_node.parent.name is not None:
-        self.__current_node = self.__current_node.parent
-        # else:
-        #     print('BIG OOF. This should never happen!')
+        if self.__current_node.parent is not None and self.__current_node.parent.name is not None:
+            self.__current_node = self.__current_node.parent
+        else:
+            print('BIG OOF. This should never happen!')

@@ -48,8 +48,7 @@ class Lexer:
             self.errors += 1
             Error('Lexer', msg, line, col)
             self.cur_pos = len(self.code)+1
-        
-        self.programExit()
+            self.programExit()
         
     def logToken(self, token):
         # Only log tokens if the -v flag was passed.

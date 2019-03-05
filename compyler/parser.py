@@ -45,7 +45,6 @@ class Parser:
             print(colored(f'PARSER ❯ {fn}', 'green'))
     
     ''' All productions to preform "derivations" '''
-    
     def parse(self):
         print(colored(f'Parsing Program {self.program}', 'blue'))
         self.logProduction('parse()')
@@ -149,7 +148,6 @@ class Parser:
                 # Check for expr inside parens
                 if self.parseExpr():
                     self.cst.cutOffChildren()
-                
                     # Check for closing paren
                     current_token = self.__tokens.pop()
                     if self.match(current_token.kind, 'T_RIGHT_PAREN'):
