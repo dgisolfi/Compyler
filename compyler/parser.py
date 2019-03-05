@@ -251,7 +251,6 @@ class Parser:
         self.cst.addNode('Expr','branch')
         current_token = self.__tokens[-1]
 
-        print(current_token.value)
         if self.parseId():
             # New Expr ID
             return True
@@ -295,10 +294,11 @@ class Parser:
             self.cst.addNode('StringExpr','branch')
             self.cst.addNode(current_token.value, 'leaf')
             self.cst.cutOffChildren()
+           
 
             if self.parseCharList():
-                
-                current_token = self.__tokens.pop()
+                print(current_token.value)
+                # current_token = self.__tokens.pop()
                 if self.match(current_token.kind, 'T_QUOTE'):
                     self.cst.addNode(current_token.value, 'leaf')
                     self.cst.cutOffChildren()
@@ -329,7 +329,7 @@ class Parser:
             if self.parseExpr():
                 self.cst.cutOffChildren()
                 current_token = self.__tokens.pop()
-                print(current_token.value, current_token.kind)
+                
                 if self.match(current_token.kind, 'T_BOOL_OP'):
                     self.cst.addNode('BoolOp','branch')
                     self.cst.addNode(current_token.value,'leaf')
@@ -379,7 +379,6 @@ class Parser:
         if self.parseChar():
             self.cst.cutOffChildren()
             return self.parseCharList()
-
         else:
             # move back up tree to get back to the branch node
             while self.cst.current_node.name is 'CharList':
@@ -395,15 +394,15 @@ class Parser:
 
     def parseChar(self):
         current_token = self.__tokens[-1]
-
+        print('char: ' + current_token.value)
         if self.match(current_token.kind, 'T_CHAR'):
             current_token = self.__tokens.pop()
             self.logProduction('parseChar()')
-            print(current_token.value)
             self.cst.addNode('char', 'branch')
             self.cst.addNode(current_token.value,'leaf')
             # go back to parent node
             self.cst.cutOffChildren()
+            return True
         else:
             # Not a char
             return False
