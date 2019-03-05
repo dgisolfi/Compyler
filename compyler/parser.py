@@ -250,7 +250,6 @@ class Parser:
     def parseExpr(self):
         self.logProduction('parseExpr()')
         self.cst.addNode('Expr','branch')
-        current_token = self.__tokens[-1]
 
         if self.parseId():
             # New Expr ID
@@ -294,13 +293,12 @@ class Parser:
             self.logProduction('parseStringExpr()')
             self.cst.addNode('StringExpr','branch')
             self.cst.addNode(current_token.value, 'leaf')
-            self.cst.cutOffChildren()
-           
-
+            # self.cst.cutOffChildren()
+                
             if self.parseCharList():
-                print(current_token.value)
                 current_token = self.__tokens.pop()
                 if self.match(current_token.kind, 'T_QUOTE'):
+                
                     self.cst.addNode(current_token.value, 'leaf')
                     self.cst.cutOffChildren()
                     return True
@@ -372,10 +370,8 @@ class Parser:
             return False
     
     def parseCharList(self):
-        current_token = self.__tokens.pop()
         self.logProduction('parseCharList()')
         self.cst.addNode('CharList','branch')
-        self.cst.addNode(current_token.value, 'leaf') 
 
         if self.parseChar():
             self.cst.cutOffChildren()
@@ -395,7 +391,8 @@ class Parser:
 
     def parseChar(self):
         current_token = self.__tokens[-1]
-        
+        print(current_token.value)
+
         if self.match(current_token.kind, 'T_CHAR'):
             current_token = self.__tokens.pop()
             self.logProduction('parseChar()')
