@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 # 2019-2-12
+
 from tree import Tree
 from error import Error
 from termcolor import colored
-# from production import createProductions
-# from tree import Tree
+
 class Parser:
     def __init__(self, tokens, verbose, printmode, program):
-        # Reverses tokens so I can use pop
+        # Reverses tokens so I can use pop...cleans 
+        # up the code significantly
         self.__tokens = tokens[::-1]
         self.cst = Tree(printmode)
         self.verbose = verbose
@@ -30,8 +31,6 @@ class Parser:
             Error('Parser', f'Expected [ {expected} ] found [ {token.value} ]', 
             token.line, token.position)
             self.errors += 1
-            # Get outta here this program is not Alan++ Compliant
-            # self.exit()
 
     def exit(self):
         # Fail the Parser if there were any errors
@@ -58,8 +57,6 @@ class Parser:
         # The most basic program is <block>$, 
         # so check for block and then $
         if self.parseBlock():
-            
-            
             current_token = self.__tokens.pop()
             if self.match(current_token.kind, 'T_EOP'):
                 self.cst.cutOffChildren()
@@ -291,6 +288,7 @@ class Parser:
         else:
             # Its not a IntEpr
             return False
+
     def parseStringExpr(self):
         # Check for quote else dis aint a string
         current_token = self.__tokens[-1]
@@ -307,7 +305,6 @@ class Parser:
                 current_token = self.__tokens.pop()
                 if self.match(current_token.kind, 'T_QUOTE'):
                     self.cst.addNode(current_token.value, 'leaf')
-                    self.cst.cutOffChildren()
                     return True
                 else:
                     self.error(self.__tokens[-1], 'T_Quote')
@@ -315,6 +312,7 @@ class Parser:
                 self.error(self.__tokens[-1], 'Charlist')
         else:
             return False
+
     def parseBooleanExpr(self):
         # Check for BoolOp first
         current_token = self.__tokens[-1]
