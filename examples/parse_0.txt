@@ -1,4 +1,4 @@
 
 {
-    a = "dss
+    print("fuck")
 }$

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # 2019-1-22
 
-ver='0.1.0'
+ver='0.2.0'
 package='compyler'
 
 import re
@@ -31,7 +31,7 @@ def replaceTabs(code):
 )
 @click.option(
     '--prettytree', '-p', is_flag=True,
-    help='Outputs CST and AST in a fancier method.'
+    help='Outputs CST and AST in a fancier form.'
 )
 def main(path, verbose, prettytree):
     # Given the path of a Alan++ source file to be compiled, generated code will be returned

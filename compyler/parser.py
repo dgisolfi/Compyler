@@ -306,7 +306,6 @@ class Parser:
             if self.parseCharList():
                 current_token = self.__tokens.pop()
                 if self.match(current_token.kind, 'T_QUOTE'):
-                
                     self.cst.addNode(current_token.value, 'leaf')
                     self.cst.cutOffChildren()
                     return True
@@ -376,7 +375,6 @@ class Parser:
         self.logProduction('parseCharList()')
 
         if self.parseChar():
-            self.cst.cutOffChildren()
             return self.parseCharList()
         else:
             # move back up tree to get back to the branch node

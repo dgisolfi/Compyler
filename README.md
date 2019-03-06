@@ -24,13 +24,17 @@ Once setup has been completed an Alan++ source code file can be compiled. To do 
 
 **--verbose or -v** - when passed all actions of compiler will be logged to stdout.
 
+**--prettytree or -p** - Outputs CST and AST in a fancier form.
+
 #### Example
 
-`compyler -v ./examples/AssignVals.txt`
+`compyler -v -p ./examples/AssignVals.txt`
 
 ## Releases
 
 0.1.0 - [Project1](https://github.com/dgisolfi/Compyler/tree/Project1)
+
+0.2.0 - [Project2](https://github.com/dgisolfi/Compyler/tree/Project2)
 
 ## Developing
 
