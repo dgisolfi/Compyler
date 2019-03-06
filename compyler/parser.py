@@ -6,10 +6,10 @@ from termcolor import colored
 # from production import createProductions
 # from tree import Tree
 class Parser:
-    def __init__(self, tokens, verbose, program):
+    def __init__(self, tokens, verbose, printmode, program):
         # Reverses tokens so I can use pop
         self.__tokens = tokens[::-1]
-        self.cst = Tree()
+        self.cst = Tree(printmode)
         self.verbose = verbose
         self.warnings = 0
         self.errors = 0
@@ -42,7 +42,7 @@ class Parser:
 
     def logProduction(self, fn):
         if self.verbose and self.errors is 0:
-            print(colored(f'PARSER ❯ {fn}', 'green'))
+            print(colored(f'PARSER ❯ {fn}', 'magenta'))
     
     ''' All productions to preform "derivations" '''
     def parse(self):
@@ -90,6 +90,7 @@ class Parser:
                 current_token = self.__tokens.pop()
                 if self.match(current_token.kind, 'T_RIGHT_BRACE'):
                     self.cst.addNode(current_token.value, 'leaf')
+                    print(self.cst.current_node.name)
                 else:
                     self.error(current_token, '}')
                     return False

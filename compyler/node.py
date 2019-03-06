@@ -2,20 +2,18 @@
 # 2019-2-12
 
 class Node:
-    def __init__(self, name, parent):
+    def __init__(self, name, parent, nid):
        self.__name = name
        self.__children = []
        self.__parent = parent
+       # id for treelib to use
+       self.__nid = nid 
 
     # Getters for all attributes
     @property
     def name(self):
         return self.__name
     
-    # @property
-    # def data(self):
-    #     return self.__data
-
     @property
     def children(self):
         return self.__children
@@ -24,9 +22,9 @@ class Node:
     def parent(self):
         return self.__parent
 
-    # @property
-    # def depth(self):
-    #     return self.__depth
+    @property
+    def nid(self):
+        return self.__nid
 
     # Setters
     @parent.setter
@@ -36,5 +34,3 @@ class Node:
     @children.setter
     def append(self, child):
         self.__children.append(child)
-
-    # or not self.__root

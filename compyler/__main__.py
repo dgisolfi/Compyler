@@ -13,8 +13,6 @@ from lexer import Lexer
 from parser import Parser
 
 
-
-
 # Remove those pesky comments before even lexing
 def removeComments(code):
     code = re.sub(r'\/\*[^\*]*\*\/', '', code)
@@ -25,15 +23,17 @@ def replaceTabs(code):
     code = re.sub(r'\t', '   ', code)
     return code
 
-
-
 @click.command()
 @click.argument('path', type=click.Path())
 @click.option(
     '--verbose', '-v', is_flag=True,
     help='Will provide details on the steps the compiler is taking.'
 )
-def main(path, verbose):
+@click.option(
+    '--prettytree', '-p', is_flag=True,
+    help='Outputs CST and AST in a fancier method.'
+)
+def main(path, verbose, prettytree):
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
     # Gotta include the emoji just because Alan said not to
     print(colored(f'\n{package} v{ver} 🐍', 'blue'))
@@ -48,7 +48,6 @@ def main(path, verbose):
 
     try:
         program = 0
-        # print(programs)
         # Check if this is the last program
         if programs[(len(programs)-1)] is '':
             programs[(len(programs)-2)] += '$'
@@ -72,7 +71,7 @@ def main(path, verbose):
 
             tokens = lex.tokens
             # Parse the tokens
-            parse = Parser(tokens,verbose, program+1)
+            parse = Parser(tokens,verbose, prettytree, program+1)
            
             if parse.errors is not 0:
                 print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'blue'))
@@ -97,22 +96,6 @@ def getFile(file):
         return lines
     except IOError:
         Error('main', f'File: {file} could not be opened please ensure the path is correct or use and absolute path')
-
-
-# def getArgs():
-#     verbose = False
-#     if len(sys.argv) is 1:
-#         Error('main', f'Missing argument "PATH".')
-#     elif sys.argv[1] == '-v':
-#         verbose = True
-#         if sys.argv[2] is not '':
-#             path = sys.argv[2]
-#         else:
-#             Error('main', f'Missing argument "PATH".')
-#     elif sys.argv[1] is not '':
-#         path = sys.argv[1]
-    
-#     main(path, verbose)
 
 
 if __name__ == "__main__":
