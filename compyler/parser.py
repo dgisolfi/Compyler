@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # 2019-2-12
 
-from tree import Tree
-from error import Error
+from .tree import Tree
+from .error import Error
 from termcolor import colored
 
 class Parser:
@@ -87,7 +87,6 @@ class Parser:
                 current_token = self.__tokens.pop()
                 if self.match(current_token.kind, 'T_RIGHT_BRACE'):
                     self.cst.addNode(current_token.value, 'leaf')
-                    print(self.cst.current_node.name)
                 else:
                     self.error(current_token, '}')
                     return False
@@ -255,14 +254,15 @@ class Parser:
         self.logProduction('parseExpr()')
         self.cst.addNode('Expr','branch')
 
-        if self.parseId():
-            # New Expr ID
-            return True
-
-        # New Expr INT, BOOL or String
-        elif self.parseIntExpr() or self.parseBooleanExpr() or self.parseStringExpr():
+         # New Expr INT, BOOL or String
+        if self.parseIntExpr() or self.parseBooleanExpr() or self.parseStringExpr():
             self.cst.cutOffChildren()
             return True
+
+        elif self.parseId():
+            # New Expr ID
+            return True
+            
         else:
             return False
 
@@ -283,7 +283,7 @@ class Parser:
                     # this is valid => a = 3
                     return True
             else:
-                self.error(current_token,'T_DIGIT')
+                self.error(current_token,'digit(0-9)')
                 
         else:
             # Its not a IntEpr

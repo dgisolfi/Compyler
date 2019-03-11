@@ -2,7 +2,7 @@
 # Author:  Daniel Nicolas Gisolfi
 
 repo=Compyler
-version=0.1.0
+version=0.2.0
 
 release: clean intro build publish
 
@@ -31,6 +31,6 @@ install:
 	@python3 -m pip install .
 
 uninstall:
-	@python3 -m pip uninstall $(repo)
+	@python3 -m pip uninstall $(repo)==$(version)
 
 .PHONY: init clean test build

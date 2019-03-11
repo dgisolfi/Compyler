@@ -8,9 +8,9 @@ import re
 import sys
 import click
 from termcolor import colored
-from error import Error
-from lexer import Lexer
-from parser import Parser
+from .error import Error
+from .lexer import Lexer
+from .parser import Parser
 
 
 # Remove those pesky comments before even lexing
@@ -34,6 +34,9 @@ def replaceTabs(code):
     help='Outputs CST and AST in a fancier form.'
 )
 def main(path, verbose, prettytree):
+    # Overwrite the flag for verbose until alan is sick of seeing it
+    verbose = True
+    
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
     # Gotta include the emoji just because Alan said not to
     print(colored(f'\n{package} v{ver} 🐍', 'blue'))
