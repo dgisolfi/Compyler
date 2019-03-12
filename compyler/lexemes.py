@@ -14,10 +14,6 @@ lexemes = {
         'priority': 2,
         'pattern':r'^(!=|==)$',
     },
-    # 'EQUALITY_OP':{
-    #     'priority': 2,
-    #     'pattern': r'^==$'
-    # },
     'ADDITION_OP': {
         'priority': 2,
         'pattern': r'^\+$'
