@@ -4,20 +4,20 @@
 import sys
 import re
 from termcolor import colored
-from compyler.error import Error
-from compyler.warning import Warning
-from compyler.tokens import Token
-from compyler.lexemes import lexemes, buffer_lexemes
+from .error import Error
+from .warning import Warning
+from .tokens import Token
+from .lexemes import lexemes, buffer_lexemes
 
 
 class Lexer:
-    def __init__(self, code, verbose):
+    def __init__(self, code, verbose, program):
         self.code = code
         self.verbose = verbose
         self.__tokens = []
         self.code = code
         self.verbose = verbose
-        self.program_count = 1
+        self.program = program
         self.line = 1
         self.col = 1
         self.cur_pos = 0
@@ -29,16 +29,6 @@ class Lexer:
     def tokens(self):
         return self.__tokens
 
-    # Remove those pesky comments before even lexing
-    def removeComments(self, code):
-        code = re.sub(r'\/\*[^\*]*\*\/', '', code)
-        return code
-
-    # In case someone dares use tabs we will avoid errors
-    def replaceTabs(self, code):
-        code = re.sub(r'\t', '   ', code)
-        return code
-
     # For the newbies that didnt know you 
     # needed a '$' at the end of a program
     def checkEOP(self):
@@ -49,24 +39,24 @@ class Lexer:
     def programExit(self):
         # Fail the Lex if there were any errors
         if self.errors > 0:
-            print(colored(f'Lex Failed for Program {self.program_count}. Errors: {self.errors}', 'red'))
+            print(colored(f'Lex Failed for Program {self.program}. Errors: {self.errors}', 'red'))
         else:
-            print(colored(f'Lex Completed for Program {self.program_count}. Errors: {self.errors}', 'blue'))
-        # Reset incase of another program
-        self.warnings = 0
-        self.errors = 0
-        self.program_count += 1
+            print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}\n', 'blue'))
+
+    def logError(self, msg, line, col):
+        if self.errors is 0:
+            self.errors += 1
+            Error('Lexer', msg, line, col)
+            self.cur_pos = len(self.code)+1
+            self.programExit()
         
     def logToken(self, token):
         # Only log tokens if the -v flag was passed.
-        if self.verbose:
+        if self.verbose and self.errors is 0:
             print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} column {token.position}', 'cyan'))
 
     def lex(self):
-        # Remove all Comments and replace tab characters
-        self.code = self.removeComments(self.code)
-        self.code = self.replaceTabs(self.code)
-
+        print(colored(f'Lexing Program {self.program}', 'blue'))
         # Check for EOP at end of file
         self.checkEOP()
 
@@ -96,7 +86,7 @@ class Lexer:
                 elif re.match(lexemes['ASSIGN_OP']['pattern'], char):
                     next = self.code[self.cur_pos+1]
                     if re.match(lexemes['ASSIGN_OP']['pattern'], next):
-                        token = Token('EQUALITY_OP', '==', self.line, self.col)
+                        token = Token('BOOL_OP', '==', self.line, self.col)
                         self.__tokens.append(token)
                         self.logToken(token)
                         self.cur_pos += 1
@@ -109,7 +99,7 @@ class Lexer:
                 elif re.match(r'^!$', char):
                     next = self.code[self.cur_pos+1]
                     if re.match(lexemes['ASSIGN_OP']['pattern'], next):
-                        token = Token('INEQUALITY_OP', '!=', self.line, self.col)
+                        token = Token('BOOL_OP', '!=', self.line, self.col)
                         self.__tokens.append(token)
                         self.logToken(token)
                         self.cur_pos += 1
@@ -124,8 +114,7 @@ class Lexer:
                 
                 else:
                     self.errors += 1
-                    Error('Lexer', f'Character: [ {repr(char)} ] is not valid in this grammer.', self.line, self.col)
-                
+                    self.logError(f'Character: [ {repr(char)} ] is not valid in this grammer.', self.line, self.col)
                 
                 self.cur_pos += 1
                 self.col += 1
@@ -133,8 +122,6 @@ class Lexer:
             else:
                 self.cur_pos += 1
                 self.col += 1
-
-        return self.__tokens
             
 
     def consumeBuffer(self, buffer):
@@ -186,9 +173,9 @@ class Lexer:
             else:
                 # Check foor invalid types! otherwise make a token for the valid chars
                 if not re.match(r'^[a-z\s]$', char) or re.match(r'\n', char):
-                    self.errors += 1
-                    Error('Lexer', f'Character list contains invalid character: [ {repr(char)} ]. It can only contain lowercase letters and spaces.', 
+                    self.logError(f'Character list contains invalid character: [ {repr(char)} ]. It can only contain lowercase letters and spaces.',
                     self.line, self.col)
+                    end_found = True
                 else:
                     token = Token('CHAR', char, self.line, self.col)
                     self.__tokens.append(token)

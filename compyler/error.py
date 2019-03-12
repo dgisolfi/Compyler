@@ -13,9 +13,8 @@ class Error:
         self.alert()
 
     def alert(self):
-        if self.module is 'main':
-            print(f"{colored(f'Error in {self.module}', 'red')}: {self.message}")
-            # Terminate the program
-            sys.exit()
+        if self.module is not  'main':
+           print(f"{colored(f'Error in {self.module}', 'red')}: {self.message} at line:{self.line} col:{self.pos}")
         else:
-            print(f"{colored(f'Error in {self.module}', 'red')}: {self.message} at line:{self.line} col:{self.pos}")
+            print(f"{colored(f'Error in {self.module}', 'red')}: {self.message}")
+            sys.exit()
