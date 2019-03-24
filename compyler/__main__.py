@@ -8,9 +8,10 @@ import re
 import sys
 import click
 from termcolor import colored
-from .error import Error
-from .lexer import Lexer
-from .parser import Parser
+from error import Error
+from lexer import Lexer
+from parser import Parser
+from semantics import SemanticAnalyser
 
 
 # Remove those pesky comments before even lexing
@@ -83,6 +84,17 @@ def main(path, verbose, prettytree):
 
             if verbose:
                 print(parse.cst)
+
+            
+            semanticAnalyser = SemanticAnalyser(verbose, prettytree, program+1, parse.cst)
+           
+            # if semanticAnalyser.errors is not 0:
+            #     print(colored(f'Skipping AST Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'blue'))
+            #     program += 1
+            #     continue
+
+            # if verbose:
+            #     print(semanticAnalyser.ast)
             
            
             program += 1

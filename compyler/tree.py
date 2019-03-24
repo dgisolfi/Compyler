@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # 2019-2-26
 
-from .node import Node
+from node import Node
 from treelib import Node as Leaf
 from treelib import Tree as Plant
 
@@ -42,6 +42,10 @@ class Tree:
         parent = self.__current_node.parent
         parent.children.pop()
         self.__current_node = parent
+
+    @property
+    def root(self):
+        return self.__root
 
     def traverse(self, node, depth):
         for i in range(0, depth):

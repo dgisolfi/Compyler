@@ -4,10 +4,10 @@
 import sys
 import re
 from termcolor import colored
-from .error import Error
-from .warning import Warning
-from .tokens import Token
-from .lexemes import lexemes, buffer_lexemes
+from error import Error
+from warning import Warning
+from tokens import Token
+from lexemes import lexemes, buffer_lexemes
 
 
 class Lexer:

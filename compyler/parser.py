@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # 2019-2-12
 
-from .tree import Tree
-from .error import Error
+from tree import Tree
+from error import Error
 from termcolor import colored
 
 class Parser:
