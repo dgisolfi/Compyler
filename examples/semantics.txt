@@ -1,4 +1,4 @@
 {
-    string a
-    a = true
+    int a
+    a = 3 + a
 }$

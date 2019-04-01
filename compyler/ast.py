@@ -1,10 +1,13 @@
 #!/usr/bin/python3
 # 2019-3-24
 
+import itertools 
+
 class AST:
     def __init__(self, cst, ast):
         self.__cst = cst
         self.__ast = ast
+        self.__leaves = []
         self.traverseTree()
 
     @property
@@ -13,6 +16,7 @@ class AST:
 
     def traverseTree(self):
         self.traverse(self.__cst.root, 0)
+        print(self.ast)
 
     def traverse(self, node, depth):
         if len(node.children) is 0:
@@ -30,22 +34,40 @@ class AST:
                 pass
             elif node.name == 'IfStatement':
                 pass
-            print(self.__ast)
+
             for i in range(0, len(node.children)):
                 self.traverse(node.children[i], depth+1)
-            
+
+    def findLeaves(self, node):
+        self.__leaves = []
+        leaves = self.__findLeaves(node)
+        return self.__leaves
     
+    def __findLeaves(self, node):
+        if node.kind == 'leaf':
+            self.__leaves.append(node)
+            return node
+        else:
+            for child in node.children:
+                leaves = self.__findLeaves(child)
+            return leaves
+            
     def traverseAssignmentStatement(self, node):
         self.ast.addNode(node.name, 'branch')
+        print(node.children)
         # now add the ID and the value
-        self.ast.addNode(node.children[0].children[0].name, 'leaf')
-        self.ast.addNode(node.children[2].children[0].children[0].name, 'leaf')
+        leaves = self.findLeaves(node)
+        self.ast.addNode(leaves[0].name, 'leaf')
+        self.ast.addNode(leaves[2].name, 'leaf')
+        self.ast.cutOffChildren()
+
     
     def traverseVarDecleration(self, node):
         self.ast.addNode(node.name, 'branch')
+        leaves = self.findLeaves(node)
         # now add the type and the ID
-        self.ast.addNode(node.children[0].children[0].name, 'leaf')
-        self.ast.addNode(node.children[1].children[0].name, 'leaf')
+        self.ast.addNode(leaves[0].name, 'leaf')
+        self.ast.addNode(leaves[1].name, 'leaf')
         self.ast.cutOffChildren()
 
         

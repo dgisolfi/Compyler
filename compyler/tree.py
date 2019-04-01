@@ -11,7 +11,7 @@ class Tree:
         self.__root = None
         # Create a 'Empty Object' to initialize
         # the current node
-        self.__current_node = Node(None, None, None)
+        self.__current_node = Node(None, None, None, None)
         self.__tree = ''
         self.__printmode = printmode
 
@@ -63,7 +63,7 @@ class Tree:
     
     def addNode(self, name, kind):
         # Create a new Node
-        node = Node(name, Node(None, None, None), self.__nodes)
+        node = Node(name, Node(None, None, None, None), self.__nodes, kind)
         # Is this the root node??
         if self.__root is None or not self.__root:
             # This is the root node
