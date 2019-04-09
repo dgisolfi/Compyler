@@ -35,6 +35,7 @@ class AST:
 
     def traverseStmtList(self, node):
         # Check wether this node has branches or leaves
+
         if len(node.children) is 0:
             # We need to be traversing things with children, so unless
             # this is the root move back up the tree as this branch is done
@@ -57,6 +58,7 @@ class AST:
             self.traverseBlock(node)
         elif node.name == 'AssignmentStatement':
             self.traverseAssignmentStatement(node)
+            print(node.name)
         elif node.name == 'VarDecleration':
             self.traverseVarDecleration(node)
         elif node.name == 'PrintStatement':
@@ -72,15 +74,36 @@ class AST:
     def traverseBlock(self, node):
         self.__ast.addNode(node.name, 'branch')
         self.traverseStmtList(node.children[1])
+
+
+    def traverseExpr(self, node):
+        # Check the Expr kind using the 1st child
+        kind = node.children[0].name
+        leaves = self.findLeaves(node)
+
+        if kind == 'IntExpr':
+            self.__ast.addNode(leaves[0].name, 'leaf')
+        
+        elif kind == 'BooleanExpr':
+            self.__ast.addNode(leaves[0].name, 'leaf')
+            
+        elif kind == 'StringExpr':
+            string = ''
+            for leaf in leaves:
+                if leaf.name != '\"':
+                    string += leaf.name
+            self.__ast.addNode(string, 'leaf')
+
+
   
     def traverseAssignmentStatement(self, node):
         self.__ast.addNode(node.name, 'branch')
-        print(node.children)
         # now add the ID and the value
         # Check for Addition statement
         leaves = self.findLeaves(node)
         self.__ast.addNode(leaves[0].name, 'leaf')
-        self.__ast.addNode(leaves[2].name, 'leaf')
+        # skip element 1 as it is the assign symbol
+        self.traverseExpr(node.children[2])
         self.__ast.cutOffChildren()
     
     def traverseVarDecleration(self, node):

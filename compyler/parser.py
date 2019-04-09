@@ -321,8 +321,6 @@ class Parser:
             self.logProduction('parseBooleanExpr()')
             self.cst.addNode('BooleanExpr','branch')
             self.parseBoolVal()
-            # Move back up to get block
-            self.cst.cutOffChildren()
             return True
         elif self.match(current_token.kind, 'T_LEFT_PAREN'):
             current_token = self.__tokens.pop()
