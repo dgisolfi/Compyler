@@ -83,18 +83,20 @@ def main(path, verbose, prettytree):
                 continue
 
             if verbose:
+                print(colored(f'CST for Program {parse.program}.\n', 'blue'))
                 print(parse.cst)
 
             
             semanticAnalyser = SemanticAnalyser(verbose, prettytree, program+1, parse.cst)
            
-            # if semanticAnalyser.errors is not 0:
-            #     print(colored(f'Skipping AST Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'blue'))
-            #     program += 1
-            #     continue
+            if semanticAnalyser.errors is not 0:
+                print(colored(f'Skipping AST Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'blue'))
+                program += 1
+                continue
 
-            # if verbose:
-            #     print(semanticAnalyser.ast)
+            if verbose:
+                print(colored(f'\nAST for Program {parse.program}.', 'blue'))
+                print(semanticAnalyser.ast)
             
            
             program += 1
