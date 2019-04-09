@@ -49,20 +49,16 @@ class AST:
             self.traverseStmtList(node.children[1])
 
 
-        
-        # [print(i.name) for i in statement_list.children]
-
     def traverseStmt(self, node):
 
         if node.name == 'Block':
             self.traverseBlock(node)
         elif node.name == 'AssignmentStatement':
             self.traverseAssignmentStatement(node)
-            print(node.name)
         elif node.name == 'VarDecleration':
             self.traverseVarDecleration(node)
         elif node.name == 'PrintStatement':
-            pass
+            self.traversePrintStatement(node)
         elif node.name == 'WhileStatement':
             self.traverseWhileStatement(node)
         elif node.name == 'IfStatement':
@@ -85,6 +81,9 @@ class AST:
             self.__ast.addNode(leaves[0].name, 'leaf')
         
         elif kind == 'BooleanExpr':
+            self.__ast.addNode(leaves[0].name, 'leaf')
+
+        elif kind == 'Id':
             self.__ast.addNode(leaves[0].name, 'leaf')
             
         elif kind == 'StringExpr':
@@ -114,31 +113,32 @@ class AST:
         self.__ast.addNode(leaves[1].name, 'leaf')
         self.__ast.cutOffChildren()
 
+    def traversePrintStatement(self, node):
+        self.__ast.addNode(node.name, 'branch')
+        self.traverseExpr(node.children[2])
+        self.__ast.cutOffChildren()
+
     def traverseWhileStatement(self, node):
         self.__ast.addNode(node.name, 'branch')
-        
         # Get BooleanExpr
         self.traverseBooleanExprStatement(node.children[0])
         
         if node.children[1].name == 'Block':
-            self.__ast.addNode('Block', 'branch')
-            
-        leaves = self.findLeaves(node.children[1])
-        # [print(i.name) for i in leaves]
+            self.traverseBlock(node.children[1])
+
         self.__ast.cutOffChildren()
 
     def traverseIfStatement(self, node):
         self.__ast.addNode(node.name, 'branch')
         
-        # Get BooleanExpr
+         # Get BooleanExpr
         self.traverseBooleanExprStatement(node.children[0])
         
         if node.children[1].name == 'Block':
-            self.__ast.addNode('Block', 'branch')
-            
-        leaves = self.findLeaves(node.children[1])
-        # [print(i.name) for i in leaves]
+            self.traverseBlock(node.children[1])
+
         self.__ast.cutOffChildren()
+
        
     def traverseBooleanExprStatement(self, node):
         leaves = self.findLeaves(node)
@@ -151,6 +151,3 @@ class AST:
         # Add second
         self.__ast.addNode(leaves[3].name, 'leaf')
         self.__ast.cutOffChildren()
-
-
-        

@@ -1,4 +1,7 @@
 {
-    boolean a
-    a = true
+    int a
+    a = 3
+    if (a != 3) {
+        print(3)
+    }
 }$
