@@ -8,7 +8,9 @@ class SymbolTable:
         # HashMap -- Python dictionaries are hashmaps
         self.__table = {};
         self.__scope = scope
-        self.__inner_block = kwargs.get('inner_block', None)
+        self.__inner_blocks = []
+        if kwargs.get('inner_block', None) is not None:
+            self.__inner_blocks.append(kwargs.get('inner_block'))
         self.pretty_table = BeautifulTable()
 
     def __repr__(self):
@@ -19,22 +21,19 @@ class SymbolTable:
         print(self.__table)
         return ''
 
-    # @property
-    # def table(self):
-    #     return self.__table
+    @property
+    def children(self):
+        return self.__inner_blocks
         
     @property
     def scope(self):
         return self.__scope
 
-    @property
-    def symbol(self, key):
-        return self.__table[key]
+
+    def get(self, key):
+        return self.__table.get(key)
     
-    @symbol.setter
+    # @symbol.setter
     def add(self, key, value):
+        print(f'TABLE: {key}, {value}')
         self.__table[key] = value
-
-
-    def append(self, var, type):
-        self.__table[var] = type

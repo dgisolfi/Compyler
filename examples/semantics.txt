@@ -1,7 +1,14 @@
 {
     int a
-    a = 3
-    if (a != 3) {
-        print(3)
+    a = 1
+    {
+        string a
+        a = "a"
+        print(a)
+    }
+    string b
+    b = "b"
+    if (a == 1) {
+        print(b)
     }
 }$
