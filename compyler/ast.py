@@ -78,20 +78,24 @@ class AST:
         leaves = self.findLeaves(node)
 
         if kind == 'IntExpr':
-            self.__ast.addNode(leaves[0].name, 'leaf')
+            self.__ast.addNode(leaves[0].name, 'leaf',
+            line=leaves[0].line, pos=leaves[0].position)
         
         elif kind == 'BooleanExpr':
-            self.__ast.addNode(leaves[0].name, 'leaf')
+            self.__ast.addNode(leaves[0].name, 'leaf',
+            line=leaves[0].line, pos=leaves[0].position)
 
         elif kind == 'Id':
-            self.__ast.addNode(leaves[0].name, 'leaf')
+            self.__ast.addNode(leaves[0].name, 'leaf',
+            line=leaves[0].line, pos=leaves[0].position)
             
         elif kind == 'StringExpr':
             string = ''
             for leaf in leaves:
                 if leaf.name != '\"':
                     string += leaf.name
-            self.__ast.addNode(string, 'leaf')
+            self.__ast.addNode(string, 'leaf',
+            line=leaves[0].line, pos=leaves[0].position)
 
 
   
@@ -100,7 +104,8 @@ class AST:
         # now add the ID and the value
         # Check for Addition statement
         leaves = self.findLeaves(node)
-        self.__ast.addNode(leaves[0].name, 'leaf')
+        self.__ast.addNode(leaves[0].name, 'leaf',
+        line=leaves[0].line, pos=leaves[0].position)
         # skip element 1 as it is the assign symbol
         self.traverseExpr(node.children[2])
         self.__ast.cutOffChildren()
@@ -109,8 +114,10 @@ class AST:
         self.__ast.addNode(node.name, 'branch')
         leaves = self.findLeaves(node)
         # now add the type and the ID
-        self.__ast.addNode(leaves[0].name, 'leaf')
-        self.__ast.addNode(leaves[1].name, 'leaf')
+        self.__ast.addNode(leaves[0].name, 'leaf',
+        line=leaves[0].line, pos=leaves[0].position)
+        self.__ast.addNode(leaves[1].name, 'leaf',
+        line=leaves[1].line, pos=leaves[1].position)
         self.__ast.cutOffChildren()
 
     def traversePrintStatement(self, node):
@@ -147,7 +154,9 @@ class AST:
         elif leaves[2].name == '!=':
             self.__ast.addNode('NotEqual', 'branch')
         # Add first 
-        self.__ast.addNode(leaves[1].name, 'leaf')
+        self.__ast.addNode(leaves[1].name, 'leaf',
+        line=leaves[1].line, pos=leaves[1].position)
         # Add second
-        self.__ast.addNode(leaves[3].name, 'leaf')
+        self.__ast.addNode(leaves[3].name, 'leaf',
+        line=leaves[3].line, pos=leaves[3].position)
         self.__ast.cutOffChildren()

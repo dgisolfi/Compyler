@@ -23,5 +23,9 @@ class SemanticAnalyser:
         self.ast = abstractedTree.ast
         print(self.ast)
 
+    def logProduction(self, fn):
+        if self.verbose and self.errors is 0:
+            print(colored(f'PARSER ❯ {fn}', 'green'))
+
     def analyze(self):
         pass

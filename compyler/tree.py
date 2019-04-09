@@ -11,7 +11,7 @@ class Tree:
         self.__root = None
         # Create a 'Empty Object' to initialize
         # the current node
-        self.__current_node = Node(None, None, None, None)
+        self.__current_node = Node(None, None, None, None, None, None)
         self.__tree = ''
         self.__printmode = printmode
 
@@ -61,9 +61,13 @@ class Tree:
             for i in range(0, len(node.children)):
                 self.traverse(node.children[i], depth+1)
     
-    def addNode(self, name, kind):
+    def addNode(self, name, kind, **kwargs):
+        line = kwargs.get('line', None)
+        pos = kwargs.get('pos', None)
+        
         # Create a new Node
-        node = Node(name, Node(None, None, None, None), self.__nodes, kind)
+        node = Node(name, Node(None, None, None, None, None, None), 
+        self.__nodes, kind, line, pos)
         # Is this the root node??
         if self.__root is None or not self.__root:
             # This is the root node
