@@ -21,6 +21,7 @@ class SemanticAnalyser:
     def genAST(self):
         abstractedTree = AST(self.cst, self.ast)
         self.ast = abstractedTree.ast
+        print(self.ast)
 
     def analyze(self):
         pass

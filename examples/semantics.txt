@@ -1,4 +1,4 @@
 {
-    int a
-    a = 3 + a
+    string a
+    a = "tree"
 }$
