@@ -87,6 +87,7 @@ def main(path, verbose, prettytree):
                 print(parse.cst)
 
             
+            
             semanticAnalyser = SemanticAnalyser(verbose, prettytree, program+1, parse.cst)
            
             if semanticAnalyser.errors is not 0:

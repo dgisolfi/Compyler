@@ -26,7 +26,7 @@ class SymbolTable:
         self.__buildTable(symbol_table)
 
         for child in symbol_table.children:
-            if len(child.children) > 0:
+            if len(child.children) is not 0:
                 self.__printTable(child)
             else:
                 self.__buildTable(child)
@@ -60,6 +60,9 @@ class SymbolTable:
     def add(self, symbol, type, line):
         # type, line, is_initialized, is_used
         self.__table[symbol] = [type, line, False, False]
+
+    def update(self, key, val):
+        self.__table[key] = val
 
     def addChild(self, child):
         self.__children.append(child)

@@ -5,6 +5,7 @@
 from ast import AST
 from tree import Tree
 from error import Error
+from warning import Warning
 from termcolor import colored
 from symtable import SymbolTable
 
@@ -18,9 +19,12 @@ class SemanticAnalyser:
         self.verbose = verbose
         self.__symbol_table = None
         self.__cur_table = None
-        self.genAST()
         print(colored(f'Analyzing Program {self.program}', 'blue'))
+        self.genAST()
+        self.log('Building Symbol Table')
         self.analyze(self.__ast.root)
+        self.log('Checking for Unused Variables')
+        self.checkUnusedVariables(self.__symbol_table)
     
     @property
     def ast(self):
@@ -31,6 +35,7 @@ class SemanticAnalyser:
         return self.__symbol_table
 
     def genAST(self):
+        self.log('Generating AST')
         abstractedTree = AST(self.cst, self.__ast)
         self.__ast = abstractedTree.ast
 
@@ -73,13 +78,28 @@ class SemanticAnalyser:
         else:
             return 'string'
 
+    def markAsUsed(self, symbol, table):
+        symbol_entry = table.get(symbol)
+        if symbol_entry is None:
+            if table.parent != None:
+                self.markAsUsed(symbol, table.parent)
+            else:
+                if table.scope is not -1:
+                    print('If you are seeing this, scope checking has not done its job. :(')  
+        else:
+            self.log(f'Marking "{symbol}" as used.')
+            symbol_entry[3] = True
+            table.update(symbol, symbol_entry)
+           
+        
+
     def scopeCheck(self, symbol, table):
-        self.log(f'Scope Checking Identifier: {symbol.name} in Scope: {table.scope}')
+        self.log(f'Scope Checking Identifier: "{symbol.name}" in Scope: {table.scope}')
         # lookup symbol in cur scope
         symbol_entry = table.get(symbol.name)
         if symbol_entry is None:
             if table.parent != None:
-                self.log(f'Identifier: {symbol.name} not found in current scope, looking to parent scope.')
+                self.log(f'Identifier: "{symbol.name}" not found in current scope, looking to parent scope.')
                 self.scopeCheck(symbol, table.parent)
                
             else:
@@ -88,7 +108,7 @@ class SemanticAnalyser:
                 symbol.line, symbol.position)
 
     def typeCheck(self, symbol, value, table):
-        self.log(f'Type Checking Identifier: {symbol.name} with Value: {value.name}')
+        self.log(f'Type Checking Identifier: "{symbol.name}" with Value: {value.name}')
 
         # lookup symbol in cur scope
         symbol_entry = self.__cur_table.get(symbol.name)
@@ -97,8 +117,8 @@ class SemanticAnalyser:
                 self.log(f'Identifier: {symbol.name} not found in current scope, looking to parent scope.')
                 self.typeCheck(symbol, value, table.parent)
             else:
-                # this means scope checking falied to catch that this symbol was not declared
-                pass            
+                if table.scope is not -1:
+                    print('If you are seeing this, scope checking has not done its job. :(')        
         else:
             var_type = symbol_entry[0]
             if var_type != self.getType(value.name):
@@ -108,7 +128,7 @@ class SemanticAnalyser:
     def checkBlock(self, node):
         self.log(f'Checking [{node.name}]')
         if self.__symbol_table is None:
-            self.__symbol_table = SymbolTable(None, 0)
+            self.__symbol_table = SymbolTable(SymbolTable(None, -1), 0)
             self.__cur_table = self.__symbol_table
         else:
             self.log(f'New Scope Detected')
@@ -126,8 +146,11 @@ class SemanticAnalyser:
         # check the type of 
         self.typeCheck(node.children[0], node.children[1], self.__cur_table)
 
+        self.markAsUsed(node.children[0].name, self.__cur_table)
+
     def checkVarDecleration(self, node):
         self.log(f'Checking [{node.name}]')
+        self.log(f'Adding {node.children[0].name} {node.children[1].name} to Symbol Table')
         # Add the Decleration to the Symbol table
         self.__cur_table.add(
             node.children[1].name,
@@ -137,6 +160,7 @@ class SemanticAnalyser:
 
     def checkPrintStatement(self, node):
         self.log(f'Checking [{node.name}]')
+        # TODO: Does scope checking need to occur here?
         # self.scopeCheck(node.children[0], self.__cur_table)
 
     def checkWhileStatement(self, node):
@@ -147,7 +171,14 @@ class SemanticAnalyser:
         self.log(f'Checking [{node.name}]')
         pass 
 
-   
 
-    def checkUnusedVariables(self):
-        self.log('Checking for Unused Variables')
+    def checkUnusedVariables(self, symbol_table):
+        # look through the symbol table and find identifiers that have 
+        # false in there isUsed feild
+        for var in symbol_table.table:
+            if not symbol_table.table[var][3]:
+                Warning('Semantic Analyzer', f'Variable "{var}" was declared on line:{symbol_table.table[var][1]} but never used')
+
+        if len(symbol_table.children) is not 0:
+            for child in symbol_table.children:
+                self.checkUnusedVariables(child)
