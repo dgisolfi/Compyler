@@ -164,15 +164,13 @@ class AST:
 
        
     def traverseBooleanExprStatement(self, node):
-        leaves = self.findLeaves(node)
-        if leaves[2].name == '==':
+        leaves = self.findLeaves(node.children[2])
+        if leaves[0].name == '==':
             self.__ast.addNode('IsEqual', 'branch')
-        elif leaves[2].name == '!=':
+        elif leaves[0].name == '!=':
             self.__ast.addNode('NotEqual', 'branch')
         # Add first 
-        self.__ast.addNode(leaves[1].name, 'leaf',
-        line=leaves[1].line, pos=leaves[1].position)
+        self.traverseExpr(node.children[1])
         # Add second
-        self.__ast.addNode(leaves[3].name, 'leaf',
-        line=leaves[3].line, pos=leaves[3].position)
+        self.traverseExpr(node.children[3])
         self.__ast.cutOffChildren()

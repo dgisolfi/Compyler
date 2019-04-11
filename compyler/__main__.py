@@ -85,8 +85,6 @@ def main(path, verbose, prettytree):
             if verbose:
                 print(colored(f'CST for Program {parse.program}.\n', 'blue'))
                 print(parse.cst)
-
-            
             
             semanticAnalyser = SemanticAnalyser(verbose, prettytree, program+1, parse.cst)
            
