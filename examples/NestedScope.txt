@@ -1,0 +1,15 @@
+/* This is to ensure scope checking is looking 
+at the parent scope before failing*/
+
+{
+    int a 
+    {
+        int b
+        {
+            int c
+            {
+                print(a)
+            }
+        }
+    }
+}$

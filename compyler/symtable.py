@@ -4,9 +4,10 @@
 from beautifultable import BeautifulTable
 
 class SymbolTable:
-    def __init__(self, scope, **kwargs):
+    def __init__(self, parent, scope, **kwargs):
         # HashMap -- Python dictionaries are hashmaps
         self.__table = {};
+        self.__parent = parent
         self.__scope = scope
         self.__inner_blocks = []
         if kwargs.get('inner_block', None) is not None:
@@ -18,8 +19,9 @@ class SymbolTable:
 
     def __str__(self):
         # table.column_headers = ['value', 'type', 'scope', 'line']
-        print(self.__table)
-        return ''
+        for table in self.__inner_blocks:
+            print(table)
+        return str(self.__table)
 
     @property
     def children(self):
@@ -29,11 +31,14 @@ class SymbolTable:
     def scope(self):
         return self.__scope
 
+    @property
+    def parent(self):
+        return self.__parent
 
     def get(self, key):
         return self.__table.get(key)
     
     # @symbol.setter
-    def add(self, key, value):
-        print(f'TABLE: {key}, {value}')
-        self.__table[key] = value
+    def add(self, symbol, type):
+        #                 type, is_initialized, is_used
+        self.__table[symbol] = [type, False, False]
