@@ -7,6 +7,7 @@
     a = 1 + 1
 
     while (a != 1) {
+        print("c")
         a = 1 + b
     }
 }$

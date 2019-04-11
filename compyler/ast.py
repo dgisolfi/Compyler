@@ -103,12 +103,14 @@ class AST:
             line=leaves[0].line, pos=leaves[0].position)
             
         elif kind == 'StringExpr':
+            self.__ast.addNode('CharList', 'branch')
             string = ''
             for leaf in leaves:
                 if leaf.name != '\"':
                     string += leaf.name
             self.__ast.addNode(string, 'leaf',
             line=leaves[0].line, pos=leaves[0].position)
+            self.__ast.cutOffChildren()
 
 
   
