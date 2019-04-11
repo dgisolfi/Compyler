@@ -97,6 +97,8 @@ def main(path, verbose, prettytree):
             if verbose:
                 print(colored(f'\nAST for Program {parse.program}.', 'blue'))
                 print(semanticAnalyser.ast)
+                print(colored(f'Symbol Table for Program {parse.program}.', 'blue'))
+                print(semanticAnalyser.symbol_table)
             
            
             program += 1

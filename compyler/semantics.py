@@ -10,7 +10,7 @@ from symtable import SymbolTable
 
 class SemanticAnalyser:
     def __init__(self, verbose, printmode, program, cst):
-        self.ast = Tree(printmode)
+        self.__ast = Tree(printmode)
         self.cst = cst
         self.warnings = 0
         self.errors = 0
@@ -18,16 +18,21 @@ class SemanticAnalyser:
         self.verbose = verbose
         self.__symbol_table = None
         self.__cur_table = None
-        self.__cur_scope = None
         self.genAST()
         print(colored(f'Analyzing Program {self.program}', 'blue'))
-        self.analyze(self.ast.root)
-        # print(self.__symbol_table)
-        # print(self.__symbol_table.children)
+        self.analyze(self.__ast.root)
+    
+    @property
+    def ast(self):
+        return self.__ast
+    
+    @property
+    def symbol_table(self):
+        return self.__symbol_table
 
     def genAST(self):
-        abstractedTree = AST(self.cst, self.ast)
-        self.ast = abstractedTree.ast
+        abstractedTree = AST(self.cst, self.__ast)
+        self.__ast = abstractedTree.ast
 
     def error(self, msg, line, pos):
         if self.errors is 0:
@@ -67,11 +72,9 @@ class SemanticAnalyser:
             return 'string'
 
     def scopeCheck(self, symbol, table):
-        self.log(f'Scope Checking Identifier: {symbol.name}')
-        print(symbol.name, table)
+        self.log(f'Scope Checking Identifier: {symbol.name} in Scope: {table.scope}')
         # lookup symbol in cur scope
         symbol_entry = table.get(symbol.name)
-        print(symbol_entry)
         if symbol_entry is None:
             if table.parent != None:
                 self.log(f'Identifier: {symbol.name} not found in current scope, looking to parent scope.')
@@ -82,15 +85,25 @@ class SemanticAnalyser:
                 self.error(f"Undeclared variable '{symbol.name}'", 
                 symbol.line, symbol.position)
 
-    def typeCheck(self, symbol, value):
+    def typeCheck(self, symbol, value, table):
         self.log(f'Type Checking Identifier: {symbol.name} with Value: {value.name}')
+
+        # lookup symbol in cur scope
         symbol_entry = self.__cur_table.get(symbol.name)
-        # print(symbol_entry)
-        var_type = symbol_entry[0]
-        if var_type != self.getType(value.name):
-            self.error(f'Type mismatch for Identifier: \'{symbol.name}\' with Value: {value.name}', 
-            symbol.line, symbol.position)
-        
+        if symbol_entry is None:
+            if table.parent != None:
+                self.log(f'Identifier: {symbol.name} not found in current scope, looking to parent scope.')
+                self.typeCheck(symbol, value, table.parent)
+            else:
+                # this means scope checking falied to catch that this symbol was not declared
+                pass            
+        else:
+            var_type = symbol_entry[0]
+            if var_type != self.getType(value.name):
+                self.error(f'Type mismatch for Identifier: \'{symbol.name}\' with Value: {value.name}', 
+                symbol.line, symbol.position)
+
+            
         
     def checkBlock(self, node):
         self.log(f'Checking [{node.name}]')
@@ -102,12 +115,9 @@ class SemanticAnalyser:
             # New Block means new scope
             self.__cur_table = SymbolTable(
                 self.__cur_table,
-                self.__cur_table.scope+1, 
-                inner_blocks=self.__symbol_table
+                self.__cur_table.scope+1
             )
-            # print(self.__cur_table.scope, (self.__cur_table.parent).scope)
-            # print(self.__symbol_table)
-        self.__cur_scope = self.__cur_table.scope
+            self.__cur_table.parent.addChild(self.__cur_table)
             
 
     def checkExpr(self):
@@ -118,19 +128,20 @@ class SemanticAnalyser:
         # lookup symbol in cur scope
         self.scopeCheck(node.children[0], self.__cur_table)
         # check the type of 
-        self.typeCheck(node.children[0], node.children[1])
-
-
+        self.typeCheck(node.children[0], node.children[1], self.__cur_table)
 
     def checkVarDecleration(self, node):
         self.log(f'Checking [{node.name}]')
         # Add the Decleration to the Symbol table
-        self.__cur_table.add(node.children[1].name,
-        node.children[0].name)
+        self.__cur_table.add(
+            node.children[1].name,
+            node.children[0].name,
+            node.children[1].line
+        )
 
     def checkPrintStatement(self, node):
         self.log(f'Checking [{node.name}]')
-        self.scopeCheck(node.children[0], self.__cur_table)
+        # self.scopeCheck(node.children[0], self.__cur_table)
         # print(f'table^ {self.__cur_table}')
         # print(f'parent^ {self.__cur_table.parent}')
 
