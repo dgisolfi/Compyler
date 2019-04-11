@@ -112,15 +112,18 @@ class SemanticAnalyser:
 
         # lookup symbol in cur scope
         symbol_entry = self.__cur_table.get(symbol.name)
+        print(repr(symbol.name), symbol_entry, table.table)
         if symbol_entry is None:
             if table.parent != None:
                 self.log(f'Identifier: {symbol.name} not found in current scope, looking to parent scope.')
                 self.typeCheck(symbol, value, table.parent)
             else:
-                if table.scope is not -1:
+                print(symbol.name)
+                if table.scope is -1:
                     print('If you are seeing this, scope checking has not done its job. :(')        
         else:
             var_type = symbol_entry[0]
+            print(var_type, self.getType(value.name))
             if var_type != self.getType(value.name):
                 self.error(f'Type mismatch for Identifier: \'{symbol.name}\' with Value: {value.name}', 
                 symbol.line, symbol.position)            
@@ -141,12 +144,16 @@ class SemanticAnalyser:
 
     def checkAssignmentStatement(self, node):
         self.log(f'Checking [{node.name}]')
-        # lookup symbol in cur scope
-        self.scopeCheck(node.children[0], self.__cur_table)
-        # check the type of 
-        self.typeCheck(node.children[0], node.children[1], self.__cur_table)
+        # [print(i.name) for i in node.children]
+        if node.children[1].name is 'Add':
+            self.checkAddition(node.children[1])
+        else:
+            # lookup symbol in cur scope
+            self.scopeCheck(node.children[0], self.__cur_table)
+            # check the type of 
+            self.typeCheck(node.children[0], node.children[1], self.__cur_table)
 
-        self.markAsUsed(node.children[0].name, self.__cur_table)
+        
 
     def checkVarDecleration(self, node):
         self.log(f'Checking [{node.name}]')
@@ -161,15 +168,36 @@ class SemanticAnalyser:
     def checkPrintStatement(self, node):
         self.log(f'Checking [{node.name}]')
         # TODO: Does scope checking need to occur here?
-        # self.scopeCheck(node.children[0], self.__cur_table)
+        self.markAsUsed(node.children[0].name, self.__cur_table)
 
     def checkWhileStatement(self, node):
         self.log(f'Checking [{node.name}]')
-        pass
+        self.markAsUsed(node.children[0].children[0].name, self.__cur_table)
 
     def checkIfStatement(self, node):
         self.log(f'Checking [{node.name}]')
         pass 
+
+    def checkAddition(self, node):
+        self.log(f'Checking [{node.name}]')
+        
+        term_1 = node.children[0]
+        term_2 = node.children[1]
+
+        if not term_2.name.isdigit():
+            # lookup symbol in cur scope
+            self.scopeCheck(term_2, self.__cur_table)
+            # check the type of the var compared to the term
+            print(term_2.name, term_1.name)
+            self.typeCheck(term_2, term_1, self.__cur_table)
+           
+
+        # else its just two numbers so its fine
+      
+        
+        
+
+
 
 
     def checkUnusedVariables(self, symbol_table):

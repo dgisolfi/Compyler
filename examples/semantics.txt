@@ -1,17 +1,12 @@
 {
     int a
-    a = 1
-    {
-        string a
-        a = "a"
-        print(a)
-    }
     string b
-    b = "b"
-    
-    if (a == 1) {
-        print(b)
+    b = "test"
+    a = 0
+
+    a = 1 + 1
+
+    while (a != 1) {
+        a = 1 + b
     }
-    
-    int d
 }$

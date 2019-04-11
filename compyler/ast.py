@@ -71,6 +71,15 @@ class AST:
         self.__ast.addNode(node.name, 'branch')
         self.traverseStmtList(node.children[1])
 
+    def traverseAdd(self, values):
+        self.__ast.addNode('Add', 'branch')
+        # add first value
+        self.__ast.addNode(values[0].name, 'leaf',
+        line=values[0].line, pos=values[0].position)
+        # skip the plus sign then add the second value
+        self.__ast.addNode(values[2].name, 'leaf',
+        line=values[2].line, pos=values[2].position)
+
 
     def traverseExpr(self, node):
         # Check the Expr kind using the 1st child
@@ -78,8 +87,12 @@ class AST:
         leaves = self.findLeaves(node)
 
         if kind == 'IntExpr':
-            self.__ast.addNode(leaves[0].name, 'leaf',
-            line=leaves[0].line, pos=leaves[0].position)
+            # check for addition stmt
+            if len(node.children[0].children) > 1:
+                self.traverseAdd(leaves)
+            else:
+                self.__ast.addNode(leaves[0].name, 'leaf',
+                line=leaves[0].line, pos=leaves[0].position)
         
         elif kind == 'BooleanExpr':
             self.__ast.addNode(leaves[0].name, 'leaf',
@@ -107,6 +120,7 @@ class AST:
         self.__ast.addNode(leaves[0].name, 'leaf',
         line=leaves[0].line, pos=leaves[0].position)
         # skip element 1 as it is the assign symbol
+        # [print(i.name) for i in leaves]
         self.traverseExpr(node.children[2])
         self.__ast.cutOffChildren()
     
