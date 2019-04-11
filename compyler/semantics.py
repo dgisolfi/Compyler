@@ -111,19 +111,16 @@ class SemanticAnalyser:
         self.log(f'Type Checking Identifier: "{symbol.name}" with Value: {value.name}')
 
         # lookup symbol in cur scope
-        symbol_entry = self.__cur_table.get(symbol.name)
-        print(repr(symbol.name), symbol_entry, table.table)
+        symbol_entry = table.get(symbol.name)
         if symbol_entry is None:
             if table.parent != None:
                 self.log(f'Identifier: {symbol.name} not found in current scope, looking to parent scope.')
                 self.typeCheck(symbol, value, table.parent)
             else:
-                print(symbol.name)
                 if table.scope is -1:
                     print('If you are seeing this, scope checking has not done its job. :(')        
         else:
             var_type = symbol_entry[0]
-            print(var_type, self.getType(value.name))
             if var_type != self.getType(value.name):
                 self.error(f'Type mismatch for Identifier: \'{symbol.name}\' with Value: {value.name}', 
                 symbol.line, symbol.position)            
@@ -188,7 +185,6 @@ class SemanticAnalyser:
             # lookup symbol in cur scope
             self.scopeCheck(term_2, self.__cur_table)
             # check the type of the var compared to the term
-            print(term_2.name, term_1.name)
             self.typeCheck(term_2, term_1, self.__cur_table)
            
 

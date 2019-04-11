@@ -1,7 +1,7 @@
 {
     int a
-    string b
-    b = "test"
+    int b
+    b = 3
     a = 0
 
     a = 1 + 1
