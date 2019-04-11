@@ -13,6 +13,7 @@ checking is looking at the parent scope before failing*/
                 a = 3
                 print(a)
             }
+            int d
         }
     }
 }$

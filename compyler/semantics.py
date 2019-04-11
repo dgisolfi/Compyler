@@ -44,8 +44,6 @@ class SemanticAnalyser:
             print(colored(f'ANALYSER ❯ {msg}', 'green'))
 
     def analyze(self, node):
-        # TODO: figure out when to make a scope 1 or 2 of orig
-        # print(self.__cur_table)
         if node.name == 'Block':
             self.checkBlock(node)
         elif node.name == 'AssignmentStatement':
@@ -60,8 +58,12 @@ class SemanticAnalyser:
             self.checkIfStatement(node)
         
         if self.errors == 0:
-            for node in node.children:
-                self.analyze(node)
+            for child in node.children:
+                self.analyze(child)
+            # This will return the scope back to its
+            # parent once the block has been analyzed
+            if node.name == 'Block':
+                self.__cur_table = self.__cur_table.parent
 
     def getType(self, value):
         if value.isdigit():
@@ -101,9 +103,7 @@ class SemanticAnalyser:
             var_type = symbol_entry[0]
             if var_type != self.getType(value.name):
                 self.error(f'Type mismatch for Identifier: \'{symbol.name}\' with Value: {value.name}', 
-                symbol.line, symbol.position)
-
-            
+                symbol.line, symbol.position)            
         
     def checkBlock(self, node):
         self.log(f'Checking [{node.name}]')
@@ -118,10 +118,6 @@ class SemanticAnalyser:
                 self.__cur_table.scope+1
             )
             self.__cur_table.parent.addChild(self.__cur_table)
-            
-
-    def checkExpr(self):
-        pass
 
     def checkAssignmentStatement(self, node):
         self.log(f'Checking [{node.name}]')
@@ -142,8 +138,6 @@ class SemanticAnalyser:
     def checkPrintStatement(self, node):
         self.log(f'Checking [{node.name}]')
         # self.scopeCheck(node.children[0], self.__cur_table)
-        # print(f'table^ {self.__cur_table}')
-        # print(f'parent^ {self.__cur_table.parent}')
 
     def checkWhileStatement(self, node):
         self.log(f'Checking [{node.name}]')
