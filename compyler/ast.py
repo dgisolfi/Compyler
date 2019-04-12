@@ -88,8 +88,6 @@ class AST:
         # Check the Expr kind using the 1st child
         kind = node.children[0].name
         leaves = self.findLeaves(node)
-        # print('-----')
-        # [print(i.name) for i in node.children]
 
         if kind == 'IntExpr':
             # check for addition stmt
@@ -99,16 +97,7 @@ class AST:
             else:
                 self.__ast.addNode(leaves[0].name, 'leaf',
                 line=leaves[0].line, pos=leaves[0].position)
-        
-        elif kind == 'BooleanExpr':
-            if len(node.children[0].children) > 1:
-                self.traverseBooleanExprStatement(node.children[0])
-                self.__ast.cutOffChildren()
-            else:
-                self.__ast.addNode(leaves[0].name, 'leaf',
-                line=leaves[0].line, pos=leaves[0].position)
                
-
         elif kind == 'Id':
             self.__ast.addNode(leaves[0].name, 'leaf',
             line=leaves[0].line, pos=leaves[0].position)
@@ -122,6 +111,14 @@ class AST:
             self.__ast.addNode(string, 'leaf',
             line=leaves[0].line, pos=leaves[0].position)
             self.__ast.cutOffChildren()
+        
+        elif kind == 'BooleanExpr':
+            if len(node.children[0].children) > 1:
+                self.traverseBooleanExprStatement(node.children[0])
+                self.__ast.cutOffChildren()
+            else:
+                self.__ast.addNode(leaves[0].name, 'leaf',
+                line=leaves[0].line, pos=leaves[0].position)
 
 
   
@@ -132,8 +129,7 @@ class AST:
         leaves = self.findLeaves(node)
         self.__ast.addNode(leaves[0].name, 'leaf',
         line=leaves[0].line, pos=leaves[0].position)
-        # skip element 1 as it is the assign symbol
-        # [print(i.name) for i in leaves]
+
         self.traverseExpr(node.children[2])
         self.__ast.cutOffChildren()
     
@@ -154,9 +150,10 @@ class AST:
 
     def traverseWhileStatement(self, node):
         self.__ast.addNode(node.name, 'branch')
+
         # Get BooleanExpr
         self.traverseBooleanExprStatement(node.children[0])
-        
+
         if node.children[1].name == 'Block':
             self.traverseBlock(node.children[1])
 
@@ -168,8 +165,6 @@ class AST:
          # Get BooleanExpr
         self.traverseBooleanExprStatement(node.children[0])
         
-        # [print(i.name) for i in node.children ]
-
         if node.children[1].name == 'Block':
             self.traverseBlock(node.children[1])
 
@@ -177,13 +172,21 @@ class AST:
 
        
     def traverseBooleanExprStatement(self, node):
-        leaves = self.findLeaves(node.children[2])
-        if leaves[0].name == '==':
-            self.__ast.addNode('IsEqual', 'branch')
-        elif leaves[0].name == '!=':
-            self.__ast.addNode('NotEqual', 'branch')
-        # Add first 
-        self.traverseExpr(node.children[1])
-        # Add second
-        self.traverseExpr(node.children[3])
-        self.__ast.cutOffChildren()
+       
+        # check for boolean values
+        if len(node.children) is 1: 
+            leaves = self.findLeaves(node)
+            self.__ast.addNode(leaves[0].name, 'leaf',
+            line=leaves[0].line, pos=leaves[0].position)
+        else:
+            leaves = self.findLeaves(node.children[2])
+            if leaves[0].name == '==':
+                self.__ast.addNode('IsEqual', 'branch')
+            elif leaves[0].name == '!=':
+                self.__ast.addNode('NotEqual', 'branch')
+            # Add first 
+            self.traverseExpr(node.children[1])
+            # Add second
+            self.traverseExpr(node.children[3])
+            
+            self.__ast.cutOffChildren()

@@ -24,9 +24,12 @@ class SemanticAnalyser:
         self.log('Building Symbol Table')
         self.analyze(self.__ast.root)
         if self.errors is 0:
+            self.log('Checking for Unused Variables')
             self.checkUnusedVariables(self.__symbol_table)
+            self.log('Checking for Uninitialized Variables')
             self.checkUninitializedVariables(self.__symbol_table)
             self.log('Done.')
+        
        
     
     @property
@@ -145,6 +148,12 @@ class SemanticAnalyser:
         second_value_type = self.getType(second_value.name)
         if second_value_type == 'variable':
             second_value_type = self.getVariable(second_value.name, self.__cur_table)
+
+        if first_value_type == 'string':
+            first_value = first_value.children[0]
+
+        if second_value_type == 'string':
+            second_value = second_value.children[0]
         
         if first_value_type != second_value_type:
             self.error(f'Type mismatch for Identifier: [{first_value.name}] with Value: {second_value.name}', 
@@ -216,6 +225,14 @@ class SemanticAnalyser:
         self.log(f'Checking {node.name}')
         term_1 = node.children[0]
         term_2 = node.children[1]
+        if term_1.name is '\"':
+            self.error(f'Attempt to add Non Integer value: [{term_1.name}]', 
+            term_1.line, term_1.position)            
+        elif term_2.name is '\"':
+            self.error(f'Attempt to add Non Integer value: [{term_2.name}]', 
+            term_2.line, term_2.position)     
+
+
         if not term_2.name.isdigit():
             # lookup symbol in cur scope
             self.scopeCheck(term_2, self.__cur_table)
@@ -227,33 +244,34 @@ class SemanticAnalyser:
     def checkBooleanExpr(self, node):
         self.log(f'Checking Boolean Expression')
 
-        if node.children[0].name in ['IsEqual', 'NotEqual']:
-            # there is a nested boolexpr
-            self.checkBooleanExpr(node.children[0])
-            # We dont know if the inner expr is a valid boolean or not, let that error get caught elsewhere and 
-            # we'll assume one value is a bool so just grab the first one
-            node.children[0] = node.children[0].children[0]
-            # print(f'new value = {node.children[0].name}')
-        elif node.children[1].name in ['IsEqual', 'NotEqual']: 
-            # there is a nested boolexpr
-            self.checkBooleanExpr(node.children[1])
-            # We dont know if the inner expr is a valid boolean or not, let that error get caught elsewhere and 
-            # we'll assume one value is a bool so just grab the first one
-            node.children[1] = node.children[1].children[0]
-            # print(f'new value = {node.children[1].name}')
+        # a BooleanExpr can also just be a true or false,
+        # we dont need to check anything with that though
+        if not node.name in ['true', 'false']:
 
-        if self.getType(node.children[0].name) is 'variable':
-            self.scopeCheck(node.children[0], self.__cur_table)
-            self.markAsUsed(node.children[0].name, self.__cur_table)
+            if node.children[0].name in ['IsEqual', 'NotEqual']:
+                # there is a nested boolexpr
+                self.checkBooleanExpr(node.children[0])
+                # We dont know if the inner expr is a valid boolean or not, let that error get caught elsewhere and 
+                # we'll assume one value is a bool so just grab the first one
+                node.children[0] = node.children[0].children[0]
+            elif node.children[1].name in ['IsEqual', 'NotEqual']: 
+                # there is a nested boolexpr
+                self.checkBooleanExpr(node.children[1])
+                # We dont know if the inner expr is a valid boolean or not, let that error get caught elsewhere and 
+                # we'll assume one value is a bool so just grab the first one
+                node.children[1] = node.children[1].children[0]
 
-        if self.getType(node.children[1].name) is 'variable':
-            self.scopeCheck(node.children[1], self.__cur_table)
-            self.markAsUsed(node.children[1].name, self.__cur_table)
-        
-        self.typeCheck(node.children[0], node.children[1], self.__cur_table)
+            if self.getType(node.children[0].name) is 'variable':
+                self.scopeCheck(node.children[0], self.__cur_table)
+                self.markAsUsed(node.children[0].name, self.__cur_table)
+
+            if self.getType(node.children[1].name) is 'variable':
+                self.scopeCheck(node.children[1], self.__cur_table)
+                self.markAsUsed(node.children[1].name, self.__cur_table)
+            
+            self.typeCheck(node.children[0], node.children[1], self.__cur_table)
 
     def checkUnusedVariables(self, symbol_table):
-        self.log('Checking for Unused Variables')
         # look through the symbol table and find identifiers that have 
         # false in there isUsed feild
         for var in symbol_table.table:
@@ -268,7 +286,6 @@ class SemanticAnalyser:
                 self.checkUnusedVariables(child)
 
     def checkUninitializedVariables(self, symbol_table):
-        self.log('Checking for Uninitialized Variables')
         # look through the symbol table and find identifiers that have 
         # false in there isInitialized feild
         for var in symbol_table.table:

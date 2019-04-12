@@ -1,0 +1,30 @@
+/* This code segment uses the max
+ - allotted memory 256 bytes 
+ - Also this is an infinite loop */
+{
+	int a
+	a = 1
+
+	if("a" == "a") {
+		a = 2
+		print("a now is two")
+	}
+
+	if(a != 1) {
+		a = 3
+		print(" a now is three")
+	}
+
+	if(a == 1) {
+		a = 3
+		print("this does not print")
+	}
+	
+	while true {
+	    print(" this will always be true")
+	}
+	
+	if false {
+	    print("thi")
+	}
+} $
