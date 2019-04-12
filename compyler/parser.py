@@ -170,7 +170,6 @@ class Parser:
     def parseAssignmentStatement(self):
         # Look at the next token but dont remove until we are sure this is a print statement
         current_token = self.__tokens[-1]
-
         if self.match(current_token.kind, 'T_ID'):
             # We are sure this is a Assignment so pop the token
             self.logProduction('parseAssignmentStatement()')
@@ -224,9 +223,11 @@ class Parser:
             self.logProduction('parseWhileStatement()')
             self.cst.addNode('WhileStatement', 'branch')
 
-            if self.parseBooleanExpr(): 
+            if self.parseBooleanExpr():
+                self.cst.cutOffChildren() 
                 if self.parseBlock():
                     self.cst.cutOffChildren()
+                    
                     return True
                 else:
                     self.error(self.__tokens[-1], '{')
@@ -244,8 +245,10 @@ class Parser:
             current_token = self.__tokens.pop()
             self.logProduction('parseIfStatement()')
             self.cst.addNode('IfStatement', 'branch')
-
+            # print( self.cst.current_node.name)
             if self.parseBooleanExpr(): 
+                self.cst.cutOffChildren()
+               
                 if self.parseBlock():
                     self.cst.cutOffChildren()
                     return True
@@ -269,6 +272,7 @@ class Parser:
             return True
 
         elif self.parseId():
+            
             # New Expr ID
             return True
             
@@ -344,13 +348,16 @@ class Parser:
                 self.cst.cutOffChildren()
                 
                 if self.parseBoolOp():
+
                     if self.parseExpr():
                         self.cst.cutOffChildren()
+
                         current_token = self.__tokens.pop()
                         if self.match(current_token.kind, 'T_RIGHT_PAREN'):
                             self.cst.addNode(current_token.value,'leaf',
                             line=current_token.line, pos=current_token.position)
-                            self.cst.cutOffChildren()
+                            # self.cst.cutOffChildren()
+                            print( self.cst.current_node.name) 
                             return True
                         else:
                             self.error(current_token, ')')

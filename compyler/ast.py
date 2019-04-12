@@ -36,7 +36,7 @@ class AST:
     def traverseStmtList(self, node):
         # Check wether this node has branches or leaves
 
-        if len(node.children) is 0:
+        if len(node.children) == 0:
             # We need to be traversing things with children, so unless
             # this is the root move back up the tree as this branch is done
             if self.__ast.root.name == self.__ast.current_node.name:
@@ -46,7 +46,10 @@ class AST:
             # If this is not epsilon then every StmtList is a combo
             # of statement followed by another statement list
             self.traverseStmt(node.children[0].children[0])
-            self.traverseStmtList(node.children[1])
+            if len(node.children) > 1:
+                self.traverseStmtList(node.children[1])
+
+         
 
 
     def traverseStmt(self, node):
@@ -85,6 +88,8 @@ class AST:
         # Check the Expr kind using the 1st child
         kind = node.children[0].name
         leaves = self.findLeaves(node)
+        # print('-----')
+        # [print(i.name) for i in node.children]
 
         if kind == 'IntExpr':
             # check for addition stmt
@@ -157,6 +162,8 @@ class AST:
          # Get BooleanExpr
         self.traverseBooleanExprStatement(node.children[0])
         
+        [print(i.name) for i in node.children ]
+
         if node.children[1].name == 'Block':
             self.traverseBlock(node.children[1])
 

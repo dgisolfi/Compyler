@@ -1,8 +1,41 @@
-/*Variable re-declared on line 6.  Results in error.*/
+/* Thx Tien. */       
 {
-	string a
-	a = "asdf"
-	print (a)
-	string a
-	a = "test"
+    int a
+    a = 0
+    string z
+    z = "bond"
+    while (a != 9) {
+        if (a != 5) {
+            print("bond")
+        }
+        {
+            a = 1 + a
+            string b
+            b = "james bond"
+            print(b)
+        }
+    }
+    {/*Holy Hell This is Disgusting*/}
+    boolean c
+    c = true
+    boolean d
+    d = (true == (true == false))
+    d = (a == b)
+    d = (1 == a)
+    d = (1 != 1)
+    d = ("string" == 1)
+    d = (a != "string")
+    d = ("string" != "string")
+    if (d == true) {
+        int c
+        c = 1 + d
+        if (c == 1) {
+            print("ugh")
+        }
+    }
+    while ("string" == a) {
+        while (1 == true) {
+            a = 1 + "string"
+        }
+    }
 }$

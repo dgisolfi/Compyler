@@ -23,9 +23,10 @@ class SemanticAnalyser:
         self.genAST()
         self.log('Building Symbol Table')
         self.analyze(self.__ast.root)
-        self.log('Checking for Unused Variables')
         self.checkUnusedVariables(self.__symbol_table)
+        self.checkUninitializedVariables(self.__symbol_table)
         self.log('Done.')
+        print(self.__ast)
     
     @property
     def ast(self):
@@ -237,6 +238,7 @@ class SemanticAnalyser:
             self.markAsUsed(node.children[1].name, self.__cur_table)
 
     def checkUnusedVariables(self, symbol_table):
+        self.log('Checking for Unused Variables')
         # look through the symbol table and find identifiers that have 
         # false in there isUsed feild
         for var in symbol_table.table:
@@ -244,6 +246,22 @@ class SemanticAnalyser:
                 Warning('Semantic Analyzer', 
                 f'Variable [{var}] was declared on line:{symbol_table.table[var][1]} but never used'
                 )
+                self.warnings += 1
+
+        if len(symbol_table.children) is not 0:
+            for child in symbol_table.children:
+                self.checkUnusedVariables(child)
+
+    def checkUninitializedVariables(self, symbol_table):
+        self.log('Checking for Uninitialized Variables')
+        # look through the symbol table and find identifiers that have 
+        # false in there isInitialized feild
+        for var in symbol_table.table:
+            if not symbol_table.table[var][2]:
+                Warning('Semantic Analyzer', 
+                f'Variable [{var}] was declared on line:{symbol_table.table[var][1]} but never Initialized'
+                )
+                self.warnings += 1
 
         if len(symbol_table.children) is not 0:
             for child in symbol_table.children:

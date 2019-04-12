@@ -1,0 +1,10 @@
+{
+    int a
+    boolean d
+    a = 1 + a
+    while (a == (d == true)) {
+       
+    }
+    /* d = (true == (true == false)) */
+  
+}$
