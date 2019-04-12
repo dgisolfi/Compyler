@@ -100,8 +100,11 @@ class AST:
                 line=leaves[0].line, pos=leaves[0].position)
         
         elif kind == 'BooleanExpr':
-            self.__ast.addNode(leaves[0].name, 'leaf',
-            line=leaves[0].line, pos=leaves[0].position)
+            if len(node.children[0].children) > 1:
+                self.traverseBooleanExprStatement(node.children[0])
+            else:
+                self.__ast.addNode(leaves[0].name, 'leaf',
+                line=leaves[0].line, pos=leaves[0].position)
 
         elif kind == 'Id':
             self.__ast.addNode(leaves[0].name, 'leaf',
@@ -162,7 +165,7 @@ class AST:
          # Get BooleanExpr
         self.traverseBooleanExprStatement(node.children[0])
         
-        [print(i.name) for i in node.children ]
+        # [print(i.name) for i in node.children ]
 
         if node.children[1].name == 'Block':
             self.traverseBlock(node.children[1])

@@ -5,6 +5,6 @@
     while (a == (d == true)) {
        
     }
-    /* d = (true == (true == false)) */
+    d = (true == (true == false))
   
 }$
