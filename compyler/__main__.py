@@ -48,7 +48,7 @@ def main(path, verbose, prettytree):
     source_code = removeComments(source_code)
     source_code = replaceTabs(source_code)
     
-    programs = source_code.split('$')
+    programs = source_code.split('}$')
 
     try:
         program = 0
@@ -56,7 +56,7 @@ def main(path, verbose, prettytree):
         warnings = 0
         # Check if this is the last program
         if programs[(len(programs)-1)] is '':
-            programs[(len(programs)-2)] += '$'
+            programs[(len(programs)-2)] += '}$'
             del programs[(len(programs)-1)]
 
         while program <= (len(programs)-1):
@@ -64,7 +64,7 @@ def main(path, verbose, prettytree):
             
             # Add the dollar sign back to the program
             if program is not (len(programs)-1):
-                code += '$'
+                code += '}$'
            
             # Begin Lexing(add one to the program count 
             # cuz it I dont want it to start at 0 But the array needs 

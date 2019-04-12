@@ -245,7 +245,6 @@ class Parser:
             current_token = self.__tokens.pop()
             self.logProduction('parseIfStatement()')
             self.cst.addNode('IfStatement', 'branch')
-            # print( self.cst.current_node.name)
             if self.parseBooleanExpr(): 
                 self.cst.cutOffChildren()
                
@@ -356,8 +355,7 @@ class Parser:
                         if self.match(current_token.kind, 'T_RIGHT_PAREN'):
                             self.cst.addNode(current_token.value,'leaf',
                             line=current_token.line, pos=current_token.position)
-                            # self.cst.cutOffChildren()
-                            print( self.cst.current_node.name) 
+
                             return True
                         else:
                             self.error(current_token, ')')

@@ -95,6 +95,7 @@ class AST:
             # check for addition stmt
             if len(node.children[0].children) > 1:
                 self.traverseAdd(leaves)
+                self.__ast.cutOffChildren()
             else:
                 self.__ast.addNode(leaves[0].name, 'leaf',
                 line=leaves[0].line, pos=leaves[0].position)
@@ -102,9 +103,11 @@ class AST:
         elif kind == 'BooleanExpr':
             if len(node.children[0].children) > 1:
                 self.traverseBooleanExprStatement(node.children[0])
+                self.__ast.cutOffChildren()
             else:
                 self.__ast.addNode(leaves[0].name, 'leaf',
                 line=leaves[0].line, pos=leaves[0].position)
+               
 
         elif kind == 'Id':
             self.__ast.addNode(leaves[0].name, 'leaf',
