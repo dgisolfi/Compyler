@@ -2,3 +2,4 @@ click>=7.0
 termcolor>=1.1.0
 pytest>=4.0.2 
 treelib>=1.5.3
+beautifultable>=0.7.0

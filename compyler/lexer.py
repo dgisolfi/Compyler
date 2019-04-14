@@ -23,6 +23,7 @@ class Lexer:
         self.cur_pos = 0
         self.prev_pos = 0
         self.errors = 0
+        self.warnings = 0
         self.lex()
        
     @property
@@ -34,6 +35,7 @@ class Lexer:
     def checkEOP(self):
         if not re.match(r'\$', self.code[-1]):
             Warning('Lexer', f'EOP not found at end of program, inserting EOP')
+            self.warnings += 1
             self.code += '$'
             
     def programExit(self):
@@ -113,7 +115,6 @@ class Lexer:
                             self.logToken(token)
                 
                 else:
-                    self.errors += 1
                     self.logError(f'Character: [ {repr(char)} ] is not valid in this grammer.', self.line, self.col)
                 
                 self.cur_pos += 1

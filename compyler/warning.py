@@ -18,7 +18,7 @@ class Warning:
             # Terminate the program
             sys.exit()
         else:
-            if  self.line is None or self.pos is None:
+            if self.line is None or self.pos is None:
                 print(f"{colored(f'Warning in {self.module}', 'yellow')}: {self.message}")
             else:
                 print(f"{colored(f'Warning in {self.module}', 'yellow')}: {self.message} at line:{self.line} col:{self.pos}")

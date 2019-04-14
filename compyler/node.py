@@ -2,12 +2,18 @@
 # 2019-2-12
 
 class Node:
-    def __init__(self, name, parent, nid):
-       self.__name = name
-       self.__children = []
-       self.__parent = parent
-       # id for treelib to use
-       self.__nid = nid 
+    def __init__(self, name, parent, nid, kind, line, pos):
+        self.__name = name
+        self.__children = []
+        self.__parent = parent
+        # id for treelib to use
+        self.__nid = nid 
+        # to hold kind of node (leaf or branch)
+        self.__kind = kind
+
+        self.__line = line
+        self.__position = pos
+
 
     # Getters for all attributes
     @property
@@ -25,6 +31,18 @@ class Node:
     @property
     def nid(self):
         return self.__nid
+    
+    @property
+    def kind(self):
+        return self.__kind
+
+    @property
+    def line(self):
+        return self.__line
+
+    @property
+    def position(self):
+        return self.__position
 
     # Setters
     @parent.setter

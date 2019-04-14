@@ -1,0 +1,19 @@
+/* This is to ensure scope checking and type 
+checking is looking at the parent scope before failing*/
+
+{
+    int a 
+    {
+        int b
+        {
+            int c
+            {
+                /* lets assign a so that type checking 
+                must go a few levels up to check it */
+                a = 3
+                print(a)
+            }
+            int d
+        }
+    }
+}$

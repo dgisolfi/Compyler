@@ -60,7 +60,10 @@ class Parser:
             current_token = self.__tokens.pop()
             if self.match(current_token.kind, 'T_EOP'):
                 self.cst.cutOffChildren()
-                self.cst.addNode(current_token.value, 'leaf')
+                # print(current_token.line)
+                self.cst.addNode(current_token.value, 'leaf', 
+                line=current_token.line, pos=current_token.position)
+
                 # We finished with 0 errors, exit safely now.
                 self.exit()
             else:
@@ -79,14 +82,16 @@ class Parser:
             # New Block
             self.logProduction('parseBlock()')
             self.cst.addNode('Block', 'branch')
-            self.cst.addNode(current_token.value, 'leaf')
+            self.cst.addNode(current_token.value, 'leaf',
+            line=current_token.line, pos=current_token.position)
 
             # Check the contents of the block
             if self.parseStatementList(): 
                 # There better be a right brace to close this block
                 current_token = self.__tokens.pop()
                 if self.match(current_token.kind, 'T_RIGHT_BRACE'):
-                    self.cst.addNode(current_token.value, 'leaf')
+                    self.cst.addNode(current_token.value, 'leaf',
+                    line=current_token.line, pos=current_token.position)
                 else:
                     self.error(current_token, '}')
                     return False
@@ -136,19 +141,22 @@ class Parser:
             # New Print Statement
             self.logProduction('parsePrintStatement()')
             self.cst.addNode('PrintStatement', 'branch')
-            self.cst.addNode(current_token.value, 'leaf')
+            self.cst.addNode(current_token.value, 'leaf',
+            line=current_token.line, pos=current_token.position)
 
             current_token = self.__tokens.pop()
             # The next token better be a open paren
             if self.match(current_token.kind, 'T_LEFT_PAREN'):
-                self.cst.addNode(current_token.value, 'leaf')
+                self.cst.addNode(current_token.value, 'leaf',
+                line=current_token.line, pos=current_token.position)
                 # Check for expr inside parens
                 if self.parseExpr():
                     self.cst.cutOffChildren()
                     # Check for closing paren
                     current_token = self.__tokens.pop()
                     if self.match(current_token.kind, 'T_RIGHT_PAREN'):
-                        self.cst.addNode(current_token.value, 'leaf')
+                        self.cst.addNode(current_token.value, 'leaf',
+                        line=current_token.line, pos=current_token.position)
                         return True
                     else:
                         self.error(current_token, ')')
@@ -163,6 +171,9 @@ class Parser:
         # Look at the next token but dont remove until we are sure this is a print statement
         current_token = self.__tokens[-1]
 
+        if self.match(current_token.kind, 'T_DIGIT') or self.match(current_token.kind, 'T_QUOTE'):
+            self.error(current_token, 'ID')   
+
         if self.match(current_token.kind, 'T_ID'):
             # We are sure this is a Assignment so pop the token
             self.logProduction('parseAssignmentStatement()')
@@ -172,7 +183,8 @@ class Parser:
             current_token = self.__tokens.pop()
             # Now look for the actual '='
             if self.match(current_token.kind, 'T_ASSIGN_OP'):
-                self.cst.addNode(current_token.value, 'leaf')
+                self.cst.addNode(current_token.value, 'leaf',
+                line=current_token.line, pos=current_token.position)
 
                 # Finally validate what the ID is being assigned to
                 if self.parseExpr():
@@ -215,9 +227,11 @@ class Parser:
             self.logProduction('parseWhileStatement()')
             self.cst.addNode('WhileStatement', 'branch')
 
-            if self.parseBooleanExpr(): 
+            if self.parseBooleanExpr():
+                self.cst.cutOffChildren() 
                 if self.parseBlock():
                     self.cst.cutOffChildren()
+                    
                     return True
                 else:
                     self.error(self.__tokens[-1], '{')
@@ -235,8 +249,9 @@ class Parser:
             current_token = self.__tokens.pop()
             self.logProduction('parseIfStatement()')
             self.cst.addNode('IfStatement', 'branch')
-
             if self.parseBooleanExpr(): 
+                self.cst.cutOffChildren()
+               
                 if self.parseBlock():
                     self.cst.cutOffChildren()
                     return True
@@ -297,14 +312,16 @@ class Parser:
             current_token = self.__tokens.pop()
             self.logProduction('parseStringExpr()')
             self.cst.addNode('StringExpr','branch')
-            self.cst.addNode(current_token.value, 'leaf')
+            self.cst.addNode(current_token.value, 'leaf',
+            line=current_token.line, pos=current_token.position)
             self.cst.addNode('CharList','branch')
            
                 
             if self.parseCharList():
                 current_token = self.__tokens.pop()
                 if self.match(current_token.kind, 'T_QUOTE'):
-                    self.cst.addNode(current_token.value, 'leaf')
+                    self.cst.addNode(current_token.value, 'leaf',
+                    line=current_token.line, pos=current_token.position)
                     return True
                 else:
                     self.error(self.__tokens[-1], 'T_Quote')
@@ -321,25 +338,27 @@ class Parser:
             self.logProduction('parseBooleanExpr()')
             self.cst.addNode('BooleanExpr','branch')
             self.parseBoolVal()
-            # Move back up to get block
-            self.cst.cutOffChildren()
             return True
         elif self.match(current_token.kind, 'T_LEFT_PAREN'):
             current_token = self.__tokens.pop()
             self.logProduction('parseBooleanExpr()')
             self.cst.addNode('BooleanExpr','branch')
-            self.cst.addNode(current_token.value,'leaf')
+            self.cst.addNode(current_token.value,'leaf',
+            line=current_token.line, pos=current_token.position)
 
             if self.parseExpr():
                 self.cst.cutOffChildren()
                 
                 if self.parseBoolOp():
+
                     if self.parseExpr():
                         self.cst.cutOffChildren()
+
                         current_token = self.__tokens.pop()
                         if self.match(current_token.kind, 'T_RIGHT_PAREN'):
-                            self.cst.addNode(current_token.value,'leaf')
-                            self.cst.cutOffChildren()
+                            self.cst.addNode(current_token.value,'leaf',
+                            line=current_token.line, pos=current_token.position)
+
                             return True
                         else:
                             self.error(current_token, ')')
@@ -362,7 +381,8 @@ class Parser:
             # the lexer already took care of that
             self.logProduction('parseId()')
             self.cst.addNode('Id', 'branch')
-            self.cst.addNode(current_token.value,'leaf')
+            self.cst.addNode(current_token.value,'leaf',
+            line=current_token.line, pos=current_token.position)
             # go back to parent node
             self.cst.cutOffChildren()
             return True
@@ -383,7 +403,8 @@ class Parser:
     def parseType(self, type_token):
         self.logProduction('parseType()')
         self.cst.addNode('Type', 'branch')
-        self.cst.addNode(type_token.value,'leaf')
+        self.cst.addNode(type_token.value,'leaf',
+        line=type_token.line, pos=type_token.position)
         # go back to parent node
         self.cst.cutOffChildren()
 
@@ -394,7 +415,8 @@ class Parser:
             current_token = self.__tokens.pop()
             self.logProduction('parseChar()')
             self.cst.addNode('char', 'branch')
-            self.cst.addNode(current_token.value,'leaf')
+            self.cst.addNode(current_token.value,'leaf',
+            line=current_token.line, pos=current_token.position)
             # go back to parent node
             self.cst.cutOffChildren()
             return True
@@ -407,7 +429,8 @@ class Parser:
         current_token = self.__tokens.pop()
         if self.match(current_token.kind, 'T_DIGIT'):
             self.cst.addNode('digit', 'branch')
-            self.cst.addNode(current_token.value,'leaf')
+            self.cst.addNode(current_token.value,'leaf',
+            line=current_token.line, pos=current_token.position)
             # go back to parent node
             self.cst.cutOffChildren()
             return True
@@ -421,7 +444,8 @@ class Parser:
             current_token = self.__tokens.pop()
             self.logProduction('parseBoolOp()')
             self.cst.addNode('BoolOp','branch')
-            self.cst.addNode(current_token.value,'leaf')
+            self.cst.addNode(current_token.value,'leaf',
+            line=current_token.line, pos=current_token.position)
             self.cst.cutOffChildren()
             return True
         else:
@@ -434,7 +458,8 @@ class Parser:
             current_token = self.__tokens.pop()
             self.logProduction('parseBoolVal()')
             self.cst.addNode('BoolVal', 'branch')
-            self.cst.addNode(current_token.value, 'leaf')
+            self.cst.addNode(current_token.value, 'leaf',
+            line=current_token.line, pos=current_token.position)
             self.cst.cutOffChildren()
             return True
         else:
@@ -446,7 +471,8 @@ class Parser:
         if self.match(current_token.kind, 'T_ADDITION_OP'):
             current_token = self.__tokens.pop()
             self.cst.addNode('IntOP','branch')
-            self.cst.addNode(current_token.value,'leaf')
+            self.cst.addNode(current_token.value,'leaf',
+            line=current_token.line, pos=current_token.position)
             self.cst.cutOffChildren()
             return True
         else:

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # 2019-1-22
 
-ver='0.2.0'
+ver='0.3.2'
 package='compyler'
 
 import re
@@ -11,6 +11,7 @@ from termcolor import colored
 from .error import Error
 from .lexer import Lexer
 from .parser import Parser
+from .semantics import SemanticAnalyser
 
 
 # Remove those pesky comments before even lexing
@@ -47,13 +48,15 @@ def main(path, verbose, prettytree):
     source_code = removeComments(source_code)
     source_code = replaceTabs(source_code)
     
-    programs = source_code.split('$')
+    programs = source_code.split('}$')
 
     try:
         program = 0
+        errors = 0
+        warnings = 0
         # Check if this is the last program
         if programs[(len(programs)-1)] is '':
-            programs[(len(programs)-2)] += '$'
+            programs[(len(programs)-2)] += '}$'
             del programs[(len(programs)-1)]
 
         while program <= (len(programs)-1):
@@ -61,7 +64,7 @@ def main(path, verbose, prettytree):
             
             # Add the dollar sign back to the program
             if program is not (len(programs)-1):
-                code += '$'
+                code += '}$'
            
             # Begin Lexing(add one to the program count 
             # cuz it I dont want it to start at 0 But the array needs 
@@ -73,6 +76,9 @@ def main(path, verbose, prettytree):
                 continue
 
             tokens = lex.tokens
+            errors += lex.errors
+            warnings += lex.warnings
+
             # Parse the tokens
             parse = Parser(tokens,verbose, prettytree, program+1)
            
@@ -82,9 +88,28 @@ def main(path, verbose, prettytree):
                 continue
 
             if verbose:
+                print(colored(f'CST for Program {parse.program}.\n', 'blue'))
                 print(parse.cst)
             
+            errors += parse.errors
+            warnings += parse.warnings
+            semanticAnalyser = SemanticAnalyser(verbose, prettytree, program+1, parse.cst)
            
+            if semanticAnalyser.errors is not 0:
+                print(colored(f'Skipping AST and Symbol Table Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'blue'))
+                program += 1
+                continue
+
+            if verbose:
+                print(colored(f'\nAST for Program {program+1}.', 'blue'))
+                print(semanticAnalyser.ast)
+                print(colored(f'Symbol Table for Program {program+1}.', 'blue'))
+                print(semanticAnalyser.symbol_table)
+            
+            errors += semanticAnalyser.errors
+            warnings += semanticAnalyser.warnings
+
+            print(colored(f'Program {program+1} compiled with {errors} errors and {warnings} warnings.', 'blue'))
             program += 1
            
     

@@ -1,0 +1,8 @@
+/* This should fail as it does not have access to the int in that scope */
+{
+    {
+       int a
+        a = 3 
+    }
+    print(a)
+}$
