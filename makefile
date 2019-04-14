@@ -2,7 +2,7 @@
 # Author:  Daniel Nicolas Gisolfi
 
 repo=Compyler
-version=0.2.0
+version=0.3.2
 
 release: clean intro build publish
 
@@ -17,9 +17,6 @@ clean:
 	-rm -r ./build
 	-rm -r ./dist
 	-rm -r ./$(repo).egg-info
-
-test: intro
-	@python3 -m pytest -s
 
 build:
 	@python setup.py sdist

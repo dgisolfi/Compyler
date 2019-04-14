@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # 2019-2-12
 
-from tree import Tree
-from error import Error
+from .tree import Tree
+from .error import Error
 from termcolor import colored
 
 class Parser:
@@ -170,6 +170,10 @@ class Parser:
     def parseAssignmentStatement(self):
         # Look at the next token but dont remove until we are sure this is a print statement
         current_token = self.__tokens[-1]
+
+        if self.match(current_token.kind, 'T_DIGIT') or self.match(current_token.kind, 'T_QUOTE'):
+            self.error(current_token, 'ID')   
+
         if self.match(current_token.kind, 'T_ID'):
             # We are sure this is a Assignment so pop the token
             self.logProduction('parseAssignmentStatement()')
@@ -271,7 +275,6 @@ class Parser:
             return True
 
         elif self.parseId():
-            
             # New Expr ID
             return True
             

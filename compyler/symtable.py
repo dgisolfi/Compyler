@@ -4,7 +4,7 @@
 from beautifultable import BeautifulTable
 
 class SymbolTable:
-    def __init__(self, parent, scope, **kwargs):
+    def __init__(self, parent, scope):
         # HashMap -- Python dictionaries are hashmaps
         self.__table = {};
         self.__parent = parent
@@ -35,7 +35,6 @@ class SymbolTable:
         for var in symbol_table.table:
             var_details = symbol_table.table[var]
             self.pretty_table.append_row([var, var_details[0], symbol_table.scope, var_details[1]])
-
 
     @property
     def table(self):

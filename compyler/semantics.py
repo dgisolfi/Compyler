@@ -2,12 +2,12 @@
 #!/usr/bin/python3
 # 2019-3-24
 
-from ast import AST
-from tree import Tree
-from error import Error
-from warning import Warning
+from .ast import AST
+from .tree import Tree
+from .error import Error
+from .warning import Warning
 from termcolor import colored
-from symtable import SymbolTable
+from .symtable import SymbolTable
 
 class SemanticAnalyser:
     def __init__(self, verbose, printmode, program, cst):
@@ -29,8 +29,6 @@ class SemanticAnalyser:
             self.log('Checking for Uninitialized Variables')
             self.checkUninitializedVariables(self.__symbol_table)
             self.log('Done.')
-        
-       
     
     @property
     def ast(self):
@@ -144,15 +142,13 @@ class SemanticAnalyser:
         first_value_type = self.getType(first_value.name)
         if first_value_type == 'variable':
             first_value_type = self.getVariable(first_value.name, self.__cur_table)
+        elif first_value_type == 'string':
+            first_value = first_value.children[0]
         
         second_value_type = self.getType(second_value.name)
         if second_value_type == 'variable':
             second_value_type = self.getVariable(second_value.name, self.__cur_table)
-
-        if first_value_type == 'string':
-            first_value = first_value.children[0]
-
-        if second_value_type == 'string':
+        elif second_value_type == 'string':
             second_value = second_value.children[0]
         
         if first_value_type != second_value_type:
@@ -175,7 +171,6 @@ class SemanticAnalyser:
 
     def checkAssignmentStatement(self, node):
         self.log(f'Checking {node.name}')
-        # [print(i.name) for i in node.children]
         if node.children[1].name is 'Add':
             self.checkAddition(node.children[1])
         elif node.children[0].name in ['IsEqual','NotEqual']:
@@ -185,8 +180,11 @@ class SemanticAnalyser:
         else:
             # lookup symbol in cur scope
             self.scopeCheck(node.children[0], self.__cur_table)
+            term_2 = node.children[1]
+            if node.children[1].name is 'Add':
+                term_2 = node.children[1].children[0]
             # check the type of 
-            self.typeCheck(node.children[0], node.children[1], self.__cur_table)
+            self.typeCheck(node.children[0], term_2, self.__cur_table)
         
         self.markAsInitialized(node.children[0].name, self.__cur_table)
     
@@ -207,8 +205,15 @@ class SemanticAnalyser:
 
     def checkPrintStatement(self, node):
         self.log(f'Checking {node.name}')
+
+        # Check for BoolExpr
+        if node.children[0].name in ['IsEqual','NotEqual']:
+            self.checkBooleanExpr(node.children[0])
+        # check for IntExpr
+        elif node.children[0].name is 'Add':
+            self.checkAddition(node.children[0])
         # Check if its a ID
-        if self.getType(node.children[0].name) is 'variable':
+        elif self.getType(node.children[0].name) is 'variable':
             self.scopeCheck(node.children[0], self.__cur_table)
             self.markAsUsed(node.children[0].name, self.__cur_table)
     
@@ -225,6 +230,7 @@ class SemanticAnalyser:
         self.log(f'Checking {node.name}')
         term_1 = node.children[0]
         term_2 = node.children[1]
+
         if term_1.name is '\"':
             self.error(f'Attempt to add Non Integer value: [{term_1.name}]', 
             term_1.line, term_1.position)            
@@ -232,14 +238,19 @@ class SemanticAnalyser:
             self.error(f'Attempt to add Non Integer value: [{term_2.name}]', 
             term_2.line, term_2.position)     
 
-
-        if not term_2.name.isdigit():
-            # lookup symbol in cur scope
+        if term_2.name is 'Add':
+            self.checkAddition(term_2)
+            self.typeCheck(term_2.children[0], term_1, self.__cur_table)
+        # if not term_2.name.isdigit():
+        elif self.getType(term_2.name) is 'variable':
             self.scopeCheck(term_2, self.__cur_table)
-            # check the type of the var compared to the term
-            self.typeCheck(term_2, term_1, self.__cur_table)
-
-        # else its just two numbers so its fine
+            self.markAsUsed(term_2.name, self.__cur_table)
+          
+            if term_2.name is 'Add':
+                self.typeCheck(term_2.children[0], term_1, self.__cur_table)
+            else:
+                # check the type of the var compared to the term
+                self.typeCheck(term_2, term_1, self.__cur_table)
 
     def checkBooleanExpr(self, node):
         self.log(f'Checking Boolean Expression')
@@ -260,6 +271,18 @@ class SemanticAnalyser:
                 # We dont know if the inner expr is a valid boolean or not, let that error get caught elsewhere and 
                 # we'll assume one value is a bool so just grab the first one
                 node.children[1] = node.children[1].children[0]
+            
+            if node.children[0].name is 'Add':
+                self.checkAddition(node.children[0])
+                # leave the function so we dont try to type check
+                # checkAddition already does type checking
+                return
+
+            if node.children[1].name is 'Add':
+                self.checkAddition(node.children[1])
+                # leave the function so we dont try to type check
+                # checkAddition already does type checking
+                return 
 
             if self.getType(node.children[0].name) is 'variable':
                 self.scopeCheck(node.children[0], self.__cur_table)
@@ -297,4 +320,4 @@ class SemanticAnalyser:
 
         if len(symbol_table.children) is not 0:
             for child in symbol_table.children:
-                self.checkUnusedVariables(child)
+                self.checkUninitializedVariables(child)

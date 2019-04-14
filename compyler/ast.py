@@ -74,14 +74,19 @@ class AST:
         self.__ast.addNode(node.name, 'branch')
         self.traverseStmtList(node.children[1])
 
-    def traverseAdd(self, values):
+    def traverseAdd(self, node):
         self.__ast.addNode('Add', 'branch')
+        leaves = self.findLeaves(node.children[0])
+
         # add first value
-        self.__ast.addNode(values[0].name, 'leaf',
-        line=values[0].line, pos=values[0].position)
+        self.__ast.addNode(leaves[0].name, 'leaf',
+        line=leaves[0].line, pos=leaves[0].position)
         # skip the plus sign then add the second value
-        self.__ast.addNode(values[2].name, 'leaf',
-        line=values[2].line, pos=values[2].position)
+        if node.children[2].name is 'Expr':
+            self.traverseExpr(node.children[2])
+        else:
+            self.__ast.addNode(node.children[2].name, 'leaf',
+            line=node.children[2].line, pos=node.children[2].position)
 
 
     def traverseExpr(self, node):
@@ -92,7 +97,7 @@ class AST:
         if kind == 'IntExpr':
             # check for addition stmt
             if len(node.children[0].children) > 1:
-                self.traverseAdd(leaves)
+                self.traverseAdd(node.children[0])
                 self.__ast.cutOffChildren()
             else:
                 self.__ast.addNode(leaves[0].name, 'leaf',

@@ -4,10 +4,10 @@
 import sys
 import re
 from termcolor import colored
-from error import Error
-from warning import Warning
-from tokens import Token
-from lexemes import lexemes, buffer_lexemes
+from .error import Error
+from .warning import Warning
+from .tokens import Token
+from .lexemes import lexemes, buffer_lexemes
 
 
 class Lexer:
@@ -115,7 +115,6 @@ class Lexer:
                             self.logToken(token)
                 
                 else:
-                    self.errors += 1
                     self.logError(f'Character: [ {repr(char)} ] is not valid in this grammer.', self.line, self.col)
                 
                 self.cur_pos += 1

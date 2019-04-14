@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # 2019-2-26
 
-from node import Node
+from .node import Node
 from treelib import Node as Leaf
 from treelib import Tree as Plant
 
