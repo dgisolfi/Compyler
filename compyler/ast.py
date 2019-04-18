@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-3-24
+# Daniel Nicolas Gisolfi
 
 class AST:
     def __init__(self, cst, ast):

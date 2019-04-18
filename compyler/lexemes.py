@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-1-30
+# Daniel Nicolas Gisolfi
 
 lexemes = {
     'TYPE': {

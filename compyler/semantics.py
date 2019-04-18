@@ -1,13 +1,13 @@
-
 #!/usr/bin/python3
 # 2019-3-24
+# Daniel Nicolas Gisolfi
 
-from .ast import AST
-from .tree import Tree
-from .error import Error
-from .warning import Warning
+from ast import AST
+from tree import Tree
+from error import Error
+from warning import Warning
 from termcolor import colored
-from .symtable import SymbolTable
+from symtable import SymbolTable
 
 class SemanticAnalyser:
     def __init__(self, verbose, printmode, program, cst):
@@ -19,7 +19,7 @@ class SemanticAnalyser:
         self.verbose = verbose
         self.__symbol_table = None
         self.__cur_table = None
-        print(colored(f'Analyzing Program {self.program}', 'blue'))
+        print(colored(f'Analyzing Program {self.program}', 'white'))
         self.genAST()
         self.log('Building Symbol Table')
         self.analyze(self.__ast.root)

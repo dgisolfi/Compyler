@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 # 2019-1-22
+# Daniel Nicolas Gisolfi
 
 import sys
 import re
 from termcolor import colored
-from .error import Error
-from .warning import Warning
-from .tokens import Token
-from .lexemes import lexemes, buffer_lexemes
+from error import Error
+from warning import Warning
+from tokens import Token
+from lexemes import lexemes, buffer_lexemes
 
 
 class Lexer:
@@ -43,7 +44,7 @@ class Lexer:
         if self.errors > 0:
             print(colored(f'Lex Failed for Program {self.program}. Errors: {self.errors}', 'red'))
         else:
-            print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}\n', 'blue'))
+            print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}\n', 'white'))
 
     def logError(self, msg, line, col):
         if self.errors is 0:
@@ -58,7 +59,7 @@ class Lexer:
             print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} column {token.position}', 'cyan'))
 
     def lex(self):
-        print(colored(f'Lexing Program {self.program}', 'blue'))
+        print(colored(f'Lexing Program {self.program}', 'white'))
         # Check for EOP at end of file
         self.checkEOP()
 

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-2-12
+# Daniel Nicolas Gisolfi
 
 class Node:
     def __init__(self, name, parent, nid, kind, line, pos):

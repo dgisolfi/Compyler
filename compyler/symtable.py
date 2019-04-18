@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-4-09
+# Daniel Nicolas Gisolfi
 
 from beautifultable import BeautifulTable
 

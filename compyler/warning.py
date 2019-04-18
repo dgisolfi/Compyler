@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-1-27
+# Daniel Nicolas Gisolfi
 
 import sys
 from termcolor import colored

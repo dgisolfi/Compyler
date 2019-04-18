@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-1-22
+# Daniel Nicolas Gisolfi
 
 ver='0.3.2'
 package='compyler'
@@ -8,10 +9,10 @@ import re
 import sys
 import click
 from termcolor import colored
-from .error import Error
-from .lexer import Lexer
-from .parser import Parser
-from .semantics import SemanticAnalyser
+from error import Error
+from lexer import Lexer
+from parser import Parser
+from semantics import SemanticAnalyser
 
 
 # Remove those pesky comments before even lexing
@@ -40,7 +41,7 @@ def main(path, verbose, prettytree):
     
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
     # Gotta include the emoji just because Alan said not to
-    print(colored(f'\n{package} v{ver} 🐍', 'blue'))
+    print(colored(f'\n{package} v{ver} 🐍', 'white', attrs=['bold']))
 
     source_code = getFile(path)
 
@@ -71,7 +72,7 @@ def main(path, verbose, prettytree):
             # to be accessed at 0)
             lex = Lexer(code, verbose, program+1)
             if lex.errors is not 0:
-                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed\n', 'blue'))
+                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed\n', 'white'))
                 program += 1
                 continue
 
@@ -83,12 +84,12 @@ def main(path, verbose, prettytree):
             parse = Parser(tokens,verbose, prettytree, program+1)
            
             if parse.errors is not 0:
-                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'blue'))
+                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'white'))
                 program += 1
                 continue
 
             if verbose:
-                print(colored(f'CST for Program {parse.program}.\n', 'blue'))
+                print(colored(f'CST for Program {parse.program}.\n', 'white'))
                 print(parse.cst)
             
             errors += parse.errors
@@ -96,20 +97,20 @@ def main(path, verbose, prettytree):
             semanticAnalyser = SemanticAnalyser(verbose, prettytree, program+1, parse.cst)
            
             if semanticAnalyser.errors is not 0:
-                print(colored(f'Skipping AST and Symbol Table Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'blue'))
+                print(colored(f'Skipping AST and Symbol Table Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'white'))
                 program += 1
                 continue
 
             if verbose:
-                print(colored(f'\nAST for Program {program+1}.', 'blue'))
+                print(colored(f'\nAST for Program {program+1}.', 'white'))
                 print(semanticAnalyser.ast)
-                print(colored(f'Symbol Table for Program {program+1}.', 'blue'))
+                print(colored(f'Symbol Table for Program {program+1}.', 'white'))
                 print(semanticAnalyser.symbol_table)
             
             errors += semanticAnalyser.errors
             warnings += semanticAnalyser.warnings
 
-            print(colored(f'Program {program+1} compiled with {errors} errors and {warnings} warnings.', 'blue'))
+            print(colored(f'Program {program+1} compiled with {errors} errors and {warnings} warnings.', 'white'))
             program += 1
            
     
