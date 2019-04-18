@@ -2,7 +2,7 @@
 # 2019-1-22
 # Daniel Nicolas Gisolfi
 
-ver='0.3.2'
+ver='0.4.0'
 package='compyler'
 
 import re
@@ -36,13 +36,17 @@ def replaceTabs(code):
     '--prettytree', '-p', is_flag=True,
     help='Outputs CST and AST in a fancier form.'
 )
+@click.option(
+    '--optimize', '-o', is_flag=True,
+    help='Implements optimizations for source code.'
+)
 def main(path, verbose, prettytree):
     # Overwrite the flag for verbose until alan is sick of seeing it
-    verbose = True
+    # verbose = True
     
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
     # Gotta include the emoji just because Alan said not to
-    print(colored(f'\n{package} v{ver} 🐍', 'white', attrs=['bold']))
+    print(colored(f'\n{package} v{ver} 🐍', 'blue', attrs=['bold']))
 
     source_code = getFile(path)
 

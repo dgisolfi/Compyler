@@ -1,0 +1,11 @@
+{
+    {
+        string a
+        a ="boi"
+    }
+
+    {
+        string a
+        a ="boi"
+    }
+}

@@ -12,6 +12,7 @@ class CodeGenerator:
         self.__symtable = symtable
         self.__code = []
         self.__heap = []
+        self.__scope = 0
 
         self.verbose = verbose
         self.errors = 0
@@ -40,8 +41,25 @@ class CodeGenerator:
     def createStatement(self, node):
         self.log(f'Found {node.name}')
 
+        if node.name == 'Block':
+            self.createBlock(node)
+        elif node.name == 'AssignmentStatement':
+           pass
+        elif node.name == 'VarDecleration':
+           pass
+        elif node.name == 'PrintStatement':
+           pass
+        elif node.name == 'WhileStatement':
+            pass
+        elif node.name == 'IfStatement':
+            pass
+        
 
     def createBlock(self, node):
+        self.log(f'Creating New Block with Scope: {self.__scope}')
+        self.__scope += 1
         for node in node.children:
             self.createStatement(node)
+
+        self.__scope -= 1
         
