@@ -2,12 +2,12 @@
 #!/usr/bin/python3
 # 2019-3-24
 
-from .ast import AST
-from .tree import Tree
-from .error import Error
-from .warning import Warning
+from ast import AST
+from tree import Tree
+from error import Error
+from warning import Warning
 from termcolor import colored
-from .symtable import SymbolTable
+from symtable import SymbolTable
 
 class SemanticAnalyser:
     def __init__(self, verbose, printmode, program, cst):

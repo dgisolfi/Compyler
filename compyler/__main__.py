@@ -8,10 +8,10 @@ import re
 import sys
 import click
 from termcolor import colored
-from .error import Error
-from .lexer import Lexer
-from .parser import Parser
-from .semantics import SemanticAnalyser
+from error import Error
+from lexer import Lexer
+from parser import Parser
+from semantics import SemanticAnalyser
 
 
 # Remove those pesky comments before even lexing
