@@ -13,6 +13,7 @@ from error import Error
 from lexer import Lexer
 from parser import Parser
 from semantics import SemanticAnalyser
+from codegen import CodeGenerator
 
 
 # Remove those pesky comments before even lexing
@@ -72,7 +73,7 @@ def main(path, verbose, prettytree):
             # to be accessed at 0)
             lex = Lexer(code, verbose, program+1)
             if lex.errors is not 0:
-                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed\n', 'white'))
+                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed\n', 'white', attrs=['bold']))
                 program += 1
                 continue
 
@@ -84,12 +85,12 @@ def main(path, verbose, prettytree):
             parse = Parser(tokens,verbose, prettytree, program+1)
            
             if parse.errors is not 0:
-                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'white'))
+                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'white', attrs=['bold']))
                 program += 1
                 continue
 
             if verbose:
-                print(colored(f'CST for Program {parse.program}.\n', 'white'))
+                print(colored(f'CST for Program {parse.program}.\n', 'white', attrs=['bold']))
                 print(parse.cst)
             
             errors += parse.errors
@@ -97,22 +98,37 @@ def main(path, verbose, prettytree):
             semanticAnalyser = SemanticAnalyser(verbose, prettytree, program+1, parse.cst)
            
             if semanticAnalyser.errors is not 0:
-                print(colored(f'Skipping AST and Symbol Table Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'white'))
+                print(colored(f'Skipping AST and Symbol Table Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'white', attrs=['bold']))
                 program += 1
                 continue
 
             if verbose:
-                print(colored(f'\nAST for Program {program+1}.', 'white'))
+                print(colored(f'\nAST for Program {program+1}.', 'white', attrs=['bold']))
                 print(semanticAnalyser.ast)
-                print(colored(f'Symbol Table for Program {program+1}.', 'white'))
+                print(colored(f'Symbol Table for Program {program+1}.', 'white', attrs=['bold']))
                 print(semanticAnalyser.symbol_table)
             
             errors += semanticAnalyser.errors
             warnings += semanticAnalyser.warnings
 
-            print(colored(f'Program {program+1} compiled with {errors} errors and {warnings} warnings.', 'white'))
+            codeGenerator = CodeGenerator(verbose, semanticAnalyser.ast,semanticAnalyser.symbol_table)
+
+            # if semanticAnalyser.errors is not 0:
+            #     print(colored(f'Skipping AST and Symbol Table Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'white', attrs=['bold']))
+            #     program += 1
+            #     continue
+
+            # if verbose:
+            #     print(colored(f'\nAST for Program {program+1}.', 'white', attrs=['bold']))
+            #     print(semanticAnalyser.ast)
+            #     print(colored(f'Symbol Table for Program {program+1}.', 'white', attrs=['bold']))
+            #     print(semanticAnalyser.symbol_table)
+
+
+
+            print(colored(f'Program {program+1} compiled with {errors} errors and {warnings} warnings.', 'white', attrs=['bold']))
             program += 1
-           
+
     
     except KeyboardInterrupt:
         print(colored('KeyboardInterrupt', 'red'))

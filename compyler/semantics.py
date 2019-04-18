@@ -19,7 +19,7 @@ class SemanticAnalyser:
         self.verbose = verbose
         self.__symbol_table = None
         self.__cur_table = None
-        print(colored(f'Analyzing Program {self.program}', 'white'))
+        print(colored(f'Analyzing Program {self.program}', 'white', attrs=['bold']))
         self.genAST()
         self.log('Building Symbol Table')
         self.analyze(self.__ast.root)
