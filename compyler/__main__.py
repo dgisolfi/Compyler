@@ -40,9 +40,9 @@ def replaceTabs(code):
     '--optimize', '-o', is_flag=True,
     help='Implements optimizations for source code.'
 )
-def main(path, verbose, prettytree):
+def main(path, verbose, prettytree, optimize):
     # Overwrite the flag for verbose until alan is sick of seeing it
-    # verbose = True
+    verbose = True
     
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
     # Gotta include the emoji just because Alan said not to
