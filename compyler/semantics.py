@@ -83,13 +83,13 @@ class SemanticAnalyser:
             if table.parent != None:
                 self.log(f'Identifier: {symbol} not found in current scope, looking to parent scope.')
                 var_type = self.getVariable(symbol, table.parent)
-                return var_type
+                return var_type, table.scope
             else:
                 # if none of the parents have it then it dont exist
                 if table.scope is -1:
-                    return None
+                    return None, None
         else:
-            return symbol_entry[0]
+            return symbol_entry[0], None
 
     def getType(self, value):
         if value.isdigit():
@@ -141,13 +141,13 @@ class SemanticAnalyser:
 
         first_value_type = self.getType(first_value.name)
         if first_value_type == 'variable':
-            first_value_type = self.getVariable(first_value.name, self.__cur_table)
+            first_value_type, scope = self.getVariable(first_value.name, self.__cur_table)
         elif first_value_type == 'string':
             first_value = first_value.children[0]
         
         second_value_type = self.getType(second_value.name)
         if second_value_type == 'variable':
-            second_value_type = self.getVariable(second_value.name, self.__cur_table)
+            second_value_type, scope = self.getVariable(second_value.name, self.__cur_table)
         elif second_value_type == 'string':
             second_value = second_value.children[0]
         
@@ -192,7 +192,11 @@ class SemanticAnalyser:
         self.log(f'Checking {node.name}')
         self.log(f'Adding [{node.children[0].name} {node.children[1].name}] to Symbol Table')
 
-        if self.getVariable(node.children[1].name, self.__cur_table) is not None:
+
+        var_type, scope = self.getVariable(node.children[1].name, self.__cur_table)
+        
+        print(scope, self.__cur_table.scope)
+        if var_type is not None and scope is not self.__cur_table.scope:
             self.error(f'Attempt to redeclare variable [{node.children[1].name}]', 
             node.children[1].line, node.children[1].position)
           

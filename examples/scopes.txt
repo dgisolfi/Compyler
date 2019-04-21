@@ -3,9 +3,10 @@
     a = 3   
     int b   
     b = 4   
-    a = b   
+    a = b    
     print(a)   
-    if (a == b) {      
+    if (a == b) {  
+        string a
         print(a)   
     }
 }$

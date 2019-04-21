@@ -48,7 +48,7 @@ class CodeGenerator:
         elif node.name == 'VarDecleration':
            self.createVarDecleration(node)
         elif node.name == 'AssignmentStatement':
-           pass
+            self.createAssignmentStatement(node)
         elif node.name == 'Pr intStatement':
            pass
         elif node.name == 'WhileStatement':
@@ -86,6 +86,7 @@ class CodeGenerator:
 
     
     def createVarDecleration(self, node):
+        # TODO: rearange scoping, gotta get the right one
         # Load the accumulator with 0
         [self.__code.append(hex) for hex in ['A9', '00']]
 
@@ -97,6 +98,10 @@ class CodeGenerator:
         temp = self.addStatic(var, scope)
         [self.__code.append(hex) for hex in temp]
 
+    def createAssignmentStatement(self, node):
+        # Get 
+        var = node.children[0]
+        print(self.__symtable.get(var.name))
         
 
         
