@@ -17,7 +17,6 @@ class CodeGenerator:
         self.__cur_symtable = symtable
   
         self.__temp_addr_count = 0
-
         self.verbose = verbose
         self.errors = 0
         self.warnings = 0
@@ -175,8 +174,8 @@ class CodeGenerator:
         # Store the accumulator in temp location 
         # Add new temp value to static table
         var = node.children[1]
-        temp = self.addStatic(var, self.__scope)
-        self.storeAccMem(temp)
+        temp_addr = self.addStatic(var, self.__scope)
+        self.storeAccMem(temp_addr)
 
     def generateAssignmentStatement(self, node):
         # Get the type of the assignment statement
@@ -190,7 +189,7 @@ class CodeGenerator:
             self.loadAccConst(value)
             
         elif type is 'boolean':
-            # translate the bool val to a int
+            # load addr of bool in heap to acc
             if node.children[1].name is 'true':
                 pass
             elif node.children[1].name is 'false':
@@ -199,12 +198,11 @@ class CodeGenerator:
             pass
         elif type is 'variable':
             # Load the accumulator with the contents of the variable
-            temp = self.getTempAddr(value)
-            self.loadAccMem(temp)
-
-
-        temp = self.getTempAddr(id)
-        self.storeAccMem(temp)
+            temp_addr = self.getTempAddr(value)
+            self.loadAccMem(temp_addr)
+            
+        temp_addr = self.getTempAddr(id)
+        self.storeAccMem(temp_addr)
         
 
     def generatePrintStatement(self, node):
@@ -212,21 +210,22 @@ class CodeGenerator:
         value = node.children[0].name
         val_type = self.getType(value)
         
-        print(val_type)
         if val_type is 'int':
             # load y reg with value
             self.loadYRegConst(value)
            
         elif val_type is 'string':
             pass
+        elif value is 'Add':
+            print('Addd')
         elif val_type is 'variable':
             # load the y reg from mem
-            temp = self.getTempAddr(value)
-            self.loadYRegMem(temp)
+            temp_addr = self.getTempAddr(value)
+            self.loadYRegMem(temp_addr)
 
             # load the X reg with 1 and Sys call
             self.loadXRegConst('1')
-            self.sysCallPrint()
+            self.sysCallPrint() 
 
 
     ''' Op Codes '''
@@ -278,9 +277,17 @@ class CodeGenerator:
         self.append('00')
 
     # EC -- Take a byte from memory and compare it with the x Register...if equal z flag is 0
-    # D0 -- if flag is 0, branch x number of bytes
+    def xRegCompare(self, addr):
+        self.append(['EC', *addr])
+
+    # D0 -- if Z flag is 0, branch x number of bytes
+    def branch(self, bytes):
+        self.append(['D0', bytes])
+
     # EE -- Increment the value of a byte
-    
+    def inccByte(self, addr):
+        self.append(['EE', *addr])
+
     # FF -- System Call...print
     def sysCallPrint(self):
         self.append('FF')
