@@ -69,7 +69,8 @@ class CodeGenerator:
     def generate(self):
         # The Program must always start with a block
         self.createBlock(self.__ast.root)
-        # print(self.__static)
+        self.append('00')
+        self.backpatch()
         print(self)
 
     def createStatement(self, node):
@@ -99,7 +100,7 @@ class CodeGenerator:
         return temp_addr[:2], temp_addr[2:]
 
     def hex(self, decimal):
-        return '{0:x}'.format(int(decimal))
+        return '{0:x}'.format(int(decimal)).upper()
 
     def getTempAddr(self, id):
         # If the addr exists at the current scope level,
@@ -121,6 +122,22 @@ class CodeGenerator:
         # Its a variable
         else:
             return 'variable'
+
+
+    def backpatch(self):
+        # backpath all static values
+        for key in self.__static.keys():
+            temp_addr = self.__static[key][0]
+            offset = self.__static[key][3]
+
+            # get the final address of the value
+            addr = self.hex((len(self.__code)-1) + offset)
+            for index, hex in enumerate(self.__code):
+                # match the TX val in the code and static table
+                if hex == temp_addr[:2]:
+                    self.__code[index] = addr
+                    self.__code[index+1] = '00'
+
 
     # code gen 
 
