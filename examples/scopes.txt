@@ -1,12 +1,5 @@
 {
     int a
-    a = 3   
-    int b   
-    b = 4   
-    a = b    
-    print(a)   
-    if (a == b) {  
-        string a
-        print(a)   
-    }
+    a = 3
+    print(4)
 }$

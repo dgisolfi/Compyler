@@ -191,11 +191,8 @@ class SemanticAnalyser:
     def checkVarDecleration(self, node):
         self.log(f'Checking {node.name}')
         self.log(f'Adding [{node.children[0].name} {node.children[1].name}] to Symbol Table')
-
-
-        var_type, scope = self.getVariable(node.children[1].name, self.__cur_table)
         
-        print(scope, self.__cur_table.scope)
+        var_type, scope = self.getVariable(node.children[1].name, self.__cur_table)
         if var_type is not None and scope is not self.__cur_table.scope:
             self.error(f'Attempt to redeclare variable [{node.children[1].name}]', 
             node.children[1].line, node.children[1].position)

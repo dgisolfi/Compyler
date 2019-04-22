@@ -12,8 +12,11 @@ class CodeGenerator:
         self.__symtable = symtable
         self.__code = []
         self.__heap = []
-        self.__static = []
-        self.__scope = 0
+        self.__static = {}
+        self.__scope = -1
+        self.__cur_symtable = symtable
+  
+        self.__temp_addr_count = 0
 
         self.verbose = verbose
         self.errors = 0
@@ -21,10 +24,29 @@ class CodeGenerator:
 
         self.generate()
 
+    def __str__(self):
+        rows = self.split(self.__code, 8)
+        out = ''
+        for row in rows:
+            for hex in row:
+                out += f'{hex} '
+            print(out)
+            out = ''
+        return ''
+
     @property
     def code(self):
         return self.__code
 
+    # used for printing
+    def split(self, arr, size):
+        arrs = []
+        while len(arr) > size:
+            splice = arr[:size]
+            arrs.append(splice)
+            arr = arr[size:]
+        arrs.append(arr)
+        return arrs
 
     def error(self, msg, line, pos):
         if self.errors is 0:
@@ -38,7 +60,8 @@ class CodeGenerator:
     def generate(self):
         # The Program must always start with a block
         self.createBlock(self.__ast.root)
-        print(self.__static)
+        # print(self.__static)
+        print(self)
 
     def createStatement(self, node):
         self.log(f'Found {node.name}')
@@ -49,8 +72,8 @@ class CodeGenerator:
            self.createVarDecleration(node)
         elif node.name == 'AssignmentStatement':
             self.createAssignmentStatement(node)
-        elif node.name == 'Pr intStatement':
-           pass
+        elif node.name == 'PrintStatement':
+            self.createPrintStatement(node)
         elif node.name == 'WhileStatement':
             pass
         elif node.name == 'IfStatement':
@@ -58,32 +81,51 @@ class CodeGenerator:
         
     # Add static values and handle all the temp value stuff
     def addStatic(self, var, scope):
-        temp = 'T0XX'
-        offset = 0
-        if len(self.__static) is not 0:
-            # This looks gross....but it works perfectly.
-            # So were grabing the last element using the -1
-            # and with that we grab the string at element 0
-            # then grab the 2nd char in the string...the num
-            prev_temp = self.__static[-1][0][1]
-            # now cast it to an int, add 1 to it and
-            # squish it all together in the new address
-            temp_num = int(prev_temp) + 1
-            temp = temp[:1] + str(temp_num) + temp[2:]
-            # Add to the offeset as well
-            offset = (self.__static[-1][3] + 1)
+        key =  var.name + str(scope)
+        temp_addr = f'T{self.__temp_addr_count}XX'
+        offset = len(self.__static)
 
-        self.__static.append([temp, var.name, scope, offset])
-        return temp[:2], temp[2:]
+        self.__static[key] = [temp_addr, var.name, scope, offset]
+        self.__temp_addr_count += 1
+        return temp_addr[:2], temp_addr[2:]
+
+    def hex(self, decimal):
+        return '{0:x}'.format(int(decimal))
+
+    def getTempAddr(self, id):
+        # If the addr exists at the current scope level,
+        # than everthing is good, just return it.
+        temp_addr = self.__static[f'{id}{self.__scope}']
+        # However if None is returned meaning it cannot be 
+        # found at that scope level...we need to go deeper.
+        # if temp_addr is None:
+        #     wh
+        return temp_addr
+
+    def getType(self, value):
+        if value.isdigit():
+            return 'int'
+        elif value in ['true', 'false']:
+            return 'boolean'
+        elif value == 'CharList':
+            return 'string'
+        # Its a variable
+        else:
+            return 'variable'
+
+    # code gen 
 
     def createBlock(self, node):
-        self.log(f'Creating New Block with Scope: {self.__scope}')
         self.__scope += 1
+        self.log(f'Creating New Block with Scope: {self.__scope}')
+        for child in self.__cur_symtable.children:
+            if child.scope is self.__scope:
+                self.__cur_symtable = child
+
         for node in node.children:
             self.createStatement(node)
 
-        self.__scope -= 1
-
+        
     
     def createVarDecleration(self, node):
         # TODO: rearange scoping, gotta get the right one
@@ -94,14 +136,45 @@ class CodeGenerator:
         # Add new temp value to static table
         self.__code.append('8D')
         var = node.children[1]
-        scope = self.__symtable.get(var.name)[1]
-        temp = self.addStatic(var, scope)
+        temp = self.addStatic(var, self.__scope)
         [self.__code.append(hex) for hex in temp]
 
     def createAssignmentStatement(self, node):
-        # Get 
-        var = node.children[0]
-        print(self.__symtable.get(var.name))
-        
+        # Get the type of the assignment statement
+        id = node.children[0].name
+        type = self.__cur_symtable.get(id)[0]
 
+        if type is 'int':
+            # load the value into the accumulator
+            value = '0' + node.children[1].name
+            [self.__code.append(hex) for hex in ['A9', value]]
+        elif type is 'boolean':
+            # translate the bool val to a int
+            if node.children[1].name is 'true':
+                pass
+            elif node.children[1].name is 'false':
+                pass
+        # string
+        else:
+            pass
+
+    def createPrintStatement(self, node):
+        # Get the type of the value
+        value = node.children[0].name
+        val_type = self.getType(value)
+        
+        print(val_type)
+        if val_type is 'int':
+            # load y reg with value
+            constant = '0' + value
+            [self.__code.append(hex) for hex in ['A0', constant]]
+        elif val_type is 'string':
+            pass
+        elif val_type is 'variable':
+            val_type = self.__cur_symtable.get(id)[0]
+
+
+
+        
+        
         
