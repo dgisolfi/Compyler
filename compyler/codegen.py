@@ -41,11 +41,18 @@ class CodeGenerator:
     def code(self):
         return self.__code
 
+    @code.setter
+    def code(self, code):
+        self.__code = code
+
     def append(self, code):
-        if type(code) is list or type(code) is tuple:
-            [self.__code.append(hex) for hex in code]
+        if type(code) is tuple:
+            code = list(code)
+        if type(code) is list:
+            self.code = self.code + code
         else:
-            self.__code.append(code)
+            self.code = self.code + [code]
+        return self.__code
 
     # used for printing
     def split(self, arr, size):
@@ -68,30 +75,20 @@ class CodeGenerator:
 
     def generate(self):
         # The Program must always start with a block
-        self.createBlock(self.__ast.root)
-        self.append('00')
+        self.generateBlock(self.__ast.root)
+        # Program Break
+        self.progBreak()
         self.backpatch()
         print(self)
 
-    def createStatement(self, node):
-        self.log(f'Found {node.name}')
-
-        if node.name == 'Block':
-            self.createBlock(node)
-        elif node.name == 'VarDecleration':
-           self.createVarDecleration(node)
-        elif node.name == 'AssignmentStatement':
-            self.createAssignmentStatement(node)
-        elif node.name == 'PrintStatement':
-            self.createPrintStatement(node)
-        elif node.name == 'WhileStatement':
-            pass
-        elif node.name == 'IfStatement':
-            pass
         
+    ''' Generation Tools '''
+
     # Add static values and handle all the temp value stuff
     def addStatic(self, var, scope):
-        key =  var.name + str(scope)
+        # stealing format of var@scope from alans example because there 
+        # is no cleaner way to represent this.
+        key =  f'{var.name}@{str(scope)}'
         temp_addr = f'T{self.__temp_addr_count}XX'
         offset = len(self.__static)
 
@@ -105,7 +102,7 @@ class CodeGenerator:
     def getTempAddr(self, id):
         # If the addr exists at the current scope level,
         # than everthing is good, just return it.
-        temp_addr = self.__static[f'{id}{self.__scope}'][0]
+        temp_addr = self.__static[f'{id}@{self.__scope}'][0]
         # However if None is returned meaning it cannot be 
         # found at that scope level...we need to go deeper.
         # if temp_addr is None:
@@ -132,16 +129,34 @@ class CodeGenerator:
 
             # get the final address of the value
             addr = self.hex((len(self.__code)-1) + offset)
+
+            self.log(f'Backpatching [ {temp_addr} ] to [ {addr+"00"} ]')
             for index, hex in enumerate(self.__code):
                 # match the TX val in the code and static table
                 if hex == temp_addr[:2]:
                     self.__code[index] = addr
+                    # Add 00's for little endian
                     self.__code[index+1] = '00'
 
+    ''' Code Generation '''
 
-    # code gen 
+    def generateStatement(self, node):
+        self.log(f'Found {node.name}')
 
-    def createBlock(self, node):
+        if node.name == 'Block':
+            self.generateBlock(node)
+        elif node.name == 'VarDecleration':
+           self.generateVarDecleration(node)
+        elif node.name == 'AssignmentStatement':
+            self.generateAssignmentStatement(node)
+        elif node.name == 'PrintStatement':
+            self.generatePrintStatement(node)
+        elif node.name == 'WhileStatement':
+            pass
+        elif node.name == 'IfStatement':
+            pass
+
+    def generateBlock(self, node):
         self.__scope += 1
         self.log(f'Creating New Block with Scope: {self.__scope}')
         for child in self.__cur_symtable.children:
@@ -149,22 +164,21 @@ class CodeGenerator:
                 self.__cur_symtable = child
 
         for node in node.children:
-            self.createStatement(node)
+            self.generateStatement(node)
         
     
-    def createVarDecleration(self, node):
+    def generateVarDecleration(self, node):
         # TODO: rearange scoping, gotta get the right one
         # Load the accumulator with 0
-        self.append(['A9', '00'])
+        self.loadAccConst('00')
 
         # Store the accumulator in temp location 
         # Add new temp value to static table
-        self.append('8D')
         var = node.children[1]
         temp = self.addStatic(var, self.__scope)
-        self.append(temp)
+        self.storeAccMem(temp)
 
-    def createAssignmentStatement(self, node):
+    def generateAssignmentStatement(self, node):
         # Get the type of the assignment statement
         id = node.children[0].name
         value = node.children[1].name
@@ -173,7 +187,8 @@ class CodeGenerator:
         if type is 'int':
             # load the value into the accumulator
             value = '0' + node.children[1].name
-            self.append(['A9', value])
+            self.loadAccConst(value)
+            
         elif type is 'boolean':
             # translate the bool val to a int
             if node.children[1].name is 'true':
@@ -184,17 +199,15 @@ class CodeGenerator:
             pass
         elif type is 'variable':
             # Load the accumulator with the contents of the variable
-            self.append('AD')
             temp = self.getTempAddr(value)
-            self.append(temp)
+            self.loadAccMem(temp)
 
 
-        self.append('8D')
         temp = self.getTempAddr(id)
-        self.append(temp)
+        self.storeAccMem(temp)
         
 
-    def createPrintStatement(self, node):
+    def generatePrintStatement(self, node):
         # Get the type of the value
         value = node.children[0].name
         val_type = self.getType(value)
@@ -202,20 +215,77 @@ class CodeGenerator:
         print(val_type)
         if val_type is 'int':
             # load y reg with value
-            self.append(['A0', ('0'+value)])
+            self.loadYRegConst(value)
+           
         elif val_type is 'string':
             pass
         elif val_type is 'variable':
-            # load the y reg with the contents of the variable
-            self.append('AC')
+            # load the y reg from mem
             temp = self.getTempAddr(value)
-            self.append(temp)
+            self.loadYRegMem(temp)
 
             # load the X reg with 1 and Sys call
-            self.append(['A2', '01', 'FF'])
+            self.loadXRegConst('1')
+            self.sysCallPrint()
+
+
+    ''' Op Codes '''
+    # some of these op codes have no reason to be there own methods
+    # however it makes everything easier to read
+
+    # explanation for syntax: *variable...
+    # it will unpack the contents of the var,
+    # I use it often below for tuples and lists
+
+    # A9 -- Load the accumulator with a constant
+    def loadAccConst(self, constant):
+        self.append(['A9', constant])
+
+    # AD -- Load the accumulator from memory
+    def loadAccMem(self, addr):
+        self.append(['AD', *addr])
+
+    # 8D -- Store the accumulator in memory
+    def storeAccMem(self, addr):
+        self.append(['8D', *addr])
+
+    # 6D -- Read from memory and add to the accumulator
+    def addToAcc(self, addr):
+        self.append(['6D', *addr])
+
+    # A2 -- Load the x register with a given constant
+    def loadXRegConst(self, constant):
+        self.append(['A2', ('0'+constant)])
+
+    # AE -- Load the x register from memory
+    def loadXRegMem(self, addr):
+        self.append(['AE', *addr])
+
+    # A0 -- Load the y register with a given constant
+    def loadYRegConst(self, constant):
+        self.append(['A0', ('0'+constant)])
+
+    # AC -- Load the y register from memory
+    def loadYRegMem(self, addr):
+        self.append(['AC', *addr])
+
+    # EA -- No Operation
+    def noOP(self):
+        self.append('EA')
+
+    # 00 -- break
+    def progBreak(self):
+        self.append('00')
+
+    # EC -- Take a byte from memory and compare it with the x Register...if equal z flag is 0
+    # D0 -- if flag is 0, branch x number of bytes
+    # EE -- Increment the value of a byte
+    
+    # FF -- System Call...print
+    def sysCallPrint(self):
+        self.append('FF')
 
 
 
-        
         
         
