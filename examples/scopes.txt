@@ -1,5 +1,8 @@
 {
     int a
     a = 3
-    print(4)
+    int b
+    b = 4
+    a = b
+    print(a)
 }$

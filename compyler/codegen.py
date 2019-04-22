@@ -34,9 +34,18 @@ class CodeGenerator:
             out = ''
         return ''
 
+    def __repr__(self):
+        return self.__str__()
+
     @property
     def code(self):
         return self.__code
+
+    def append(self, code):
+        if type(code) is list or type(code) is tuple:
+            [self.__code.append(hex) for hex in code]
+        else:
+            self.__code.append(code)
 
     # used for printing
     def split(self, arr, size):
@@ -95,12 +104,12 @@ class CodeGenerator:
     def getTempAddr(self, id):
         # If the addr exists at the current scope level,
         # than everthing is good, just return it.
-        temp_addr = self.__static[f'{id}{self.__scope}']
+        temp_addr = self.__static[f'{id}{self.__scope}'][0]
         # However if None is returned meaning it cannot be 
         # found at that scope level...we need to go deeper.
         # if temp_addr is None:
         #     wh
-        return temp_addr
+        return temp_addr[:2], temp_addr[2:]
 
     def getType(self, value):
         if value.isdigit():
@@ -124,39 +133,49 @@ class CodeGenerator:
 
         for node in node.children:
             self.createStatement(node)
-
         
     
     def createVarDecleration(self, node):
         # TODO: rearange scoping, gotta get the right one
         # Load the accumulator with 0
-        [self.__code.append(hex) for hex in ['A9', '00']]
+        self.append(['A9', '00'])
 
         # Store the accumulator in temp location 
         # Add new temp value to static table
-        self.__code.append('8D')
+        self.append('8D')
         var = node.children[1]
         temp = self.addStatic(var, self.__scope)
-        [self.__code.append(hex) for hex in temp]
+        self.append(temp)
 
     def createAssignmentStatement(self, node):
         # Get the type of the assignment statement
         id = node.children[0].name
-        type = self.__cur_symtable.get(id)[0]
+        value = node.children[1].name
+        type = self.getType(value)
 
         if type is 'int':
             # load the value into the accumulator
             value = '0' + node.children[1].name
-            [self.__code.append(hex) for hex in ['A9', value]]
+            self.append(['A9', value])
         elif type is 'boolean':
             # translate the bool val to a int
             if node.children[1].name is 'true':
                 pass
             elif node.children[1].name is 'false':
                 pass
-        # string
-        else:
+        elif type is 'string':
             pass
+        elif type is 'variable':
+            # Load the accumulator with the contents of the variable
+            self.append('AD')
+            temp = self.getTempAddr(value)
+            self.append(temp)
+
+
+        self.append('8D')
+        temp = self.getTempAddr(id)
+        self.append(temp)
+        
 
     def createPrintStatement(self, node):
         # Get the type of the value
@@ -166,12 +185,17 @@ class CodeGenerator:
         print(val_type)
         if val_type is 'int':
             # load y reg with value
-            constant = '0' + value
-            [self.__code.append(hex) for hex in ['A0', constant]]
+            self.append(['A0', ('0'+value)])
         elif val_type is 'string':
             pass
         elif val_type is 'variable':
-            val_type = self.__cur_symtable.get(id)[0]
+            # load the y reg with the contents of the variable
+            self.append('AC')
+            temp = self.getTempAddr(value)
+            self.append(temp)
+
+            # load the X reg with 1 and Sys call
+            self.append(['A2', '01', 'FF'])
 
 
 
