@@ -78,6 +78,7 @@ class CodeGenerator:
         # Program Break
         self.progBreak()
         self.backpatch()
+        self.mergeHeap()
         print(self)
 
         
@@ -95,8 +96,16 @@ class CodeGenerator:
         self.__temp_addr_count += 1
         return temp_addr[:2], temp_addr[2:]
 
+    def addToHeap(self, data):
+        for char in data:
+            self.__heap.append(self.hex(ord(char)))
+        # The string terminator
+        self.__heap.append('00')
+
+        return self.hex(255-len(self.__heap)+1)
+
     def hex(self, decimal):
-        return '{0:x}'.format(int(decimal)).upper()
+        return ("0x%02X" % decimal).upper()[2:]
 
     def getTempAddr(self, id):
         # If the addr exists at the current scope level,
@@ -119,7 +128,6 @@ class CodeGenerator:
         else:
             return 'variable'
 
-
     def backpatch(self):
         # backpath all static values
         for key in self.__static.keys():
@@ -136,6 +144,15 @@ class CodeGenerator:
                     self.__code[index] = addr
                     # Add 00's for little endian
                     self.__code[index+1] = '00'
+
+    def mergeHeap(self):
+        # no use adding a ton of zeros if the heap went unused
+        if len(self.__heap) is 0:
+            return
+    
+        max_addr = 255-len(self.__heap)
+        [self.append('00') for null in range(len(self.code)-1, max_addr)]
+        self.append(self.__heap)
 
     ''' Code Generation '''
 
@@ -195,14 +212,17 @@ class CodeGenerator:
             elif node.children[1].name is 'false':
                 pass
         elif type is 'string':
-            pass
+            heap_addr = self.addToHeap(node.children[1].children[0].name)
+            self.loadAccConst(heap_addr)
+
         elif type is 'variable':
             # Load the accumulator with the contents of the variable
             temp_addr = self.getTempAddr(value)
             self.loadAccMem(temp_addr)
-            
+
         temp_addr = self.getTempAddr(id)
         self.storeAccMem(temp_addr)
+        
         
 
     def generatePrintStatement(self, node):
@@ -222,9 +242,15 @@ class CodeGenerator:
             # load the y reg from mem
             temp_addr = self.getTempAddr(value)
             self.loadYRegMem(temp_addr)
-
-            # load the X reg with 1 and Sys call
-            self.loadXRegConst('1')
+            
+            # var_type = self.getType(node.children[1].name)
+            # if var_type is 'int':
+            #     # load the X reg with 1
+            #     self.loadXRegConst('1')
+            # else:
+            # load the X reg with 2 
+            self.loadXRegConst('2')
+           
             self.sysCallPrint() 
 
 
