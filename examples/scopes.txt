@@ -1,5 +1,4 @@
 {
     string a
-    a = "biggggg test"
-    print(a)
-}$
+    a = "boob"
+}

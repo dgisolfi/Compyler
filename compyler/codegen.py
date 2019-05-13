@@ -85,37 +85,51 @@ class CodeGenerator:
     ''' Generation Tools '''
 
     # Add static values and handle all the temp value stuff
-    def addStatic(self, var, scope):
+    def addStatic(self, var, var_type):
         # stealing format of var@scope from alans example because there 
         # is no cleaner way to represent this.
-        key =  f'{var.name}@{str(scope)}'
+        key =  f'{var.name}@{str(self.__scope)}'
         temp_addr = f'T{self.__temp_addr_count}XX'
         offset = len(self.__static)
 
-        self.__static[key] = [temp_addr, var.name, scope, offset]
+        self.__static[key] = [temp_addr, var_type, offset]
         self.__temp_addr_count += 1
         return temp_addr[:2], temp_addr[2:]
-
-    def addToHeap(self, data):
-        for char in data:
-            self.__heap.append(self.hex(ord(char)))
-        # The string terminator
-        self.__heap.append('00')
-
-        return self.hex(255-len(self.__heap)+1)
-
-    def hex(self, decimal):
-        return ("0x%02X" % decimal).upper()[2:]
 
     def getTempAddr(self, id):
         # If the addr exists at the current scope level,
         # than everthing is good, just return it.
-        temp_addr = self.__static[f'{id}@{self.__scope}'][0]
+        temp_addr = self.__static.get(f'{id}@{self.__scope}'[0], None)
         # However if None is returned meaning it cannot be 
         # found at that scope level...we need to go deeper.
-        # if temp_addr is None:
-        #     wh
-        return temp_addr[:2], temp_addr[2:]
+        if temp_addr is None:
+            return None
+        else:
+            return temp_addr[:2], temp_addr[2:]
+
+    def addToHeap(self, string):
+        for char in string:
+            self.__heap.append(self.hex(ord(char)))
+        # The string terminator
+        self.__heap.append('00')
+        pointer = self.hex(255-len(self.__heap)+1)
+        self.addStatic(string, 'string')
+        return pointer
+
+    # def getPointer(self, value):
+    #     return self.__static.get(value, None)
+
+    def hex(self, decimal):
+        return ("0x%02X" % decimal).upper()[2:]
+
+    # def getVarType(self, variable):
+    #     search = True
+    #     while search:
+    #         print(self.)
+    #     if self.__static.get(variable):
+    #         return self.
+    #     else:
+    #         return None
 
     def getType(self, value):
         if value.isdigit():
@@ -184,74 +198,103 @@ class CodeGenerator:
         
     
     def generateVarDecleration(self, node):
-        # TODO: rearange scoping, gotta get the right one
-        # Load the accumulator with 0
-        self.loadAccConst('00')
-
-        # Store the accumulator in temp location 
-        # Add new temp value to static table
         var = node.children[1]
-        temp_addr = self.addStatic(var, self.__scope)
-        self.storeAccMem(temp_addr)
+        var_type = node.children[0].name
+        if var_type != 'string':
+            # Load the accumulator with 0
+            self.loadAccConst('00')
+            # Store the accumulator in temp location 
+            # Add new temp value to static table
+            temp_addr = self.addStatic(var, var_type)
+            self.storeAccMem(temp_addr)
 
     def generateAssignmentStatement(self, node):
         # Get the type of the assignment statement
-        id = node.children[0].name
-        value = node.children[1].name
-        type = self.getType(value)
+        var = node.children[0].name
+        print(node.children[1].name)
+        value = node.children[1]
+        val_type = self.generateExpr(value, 'Acc')
 
-        if type is 'int':
-            # load the value into the accumulator
-            value = '0' + node.children[1].name
-            self.loadAccConst(value)
+
+        if val_type is 'string':
+            if self.getTempAddr(var) is None:
+                string = node.children[1].children[0].name
+                temp_addr = self.addToHeap(string)
+
+        else:
+            temp_addr = self.getTempAddr(var)
+        
+
+        # if val_type is 'int':
+        #     # load the value into the accumulator
+        #     value = '0' + node.children[1].name
+        #     self.loadAccConst(value)
             
-        elif type is 'boolean':
-            # load addr of bool in heap to acc
-            if node.children[1].name is 'true':
-                pass
-            elif node.children[1].name is 'false':
-                pass
-        elif type is 'string':
-            heap_addr = self.addToHeap(node.children[1].children[0].name)
-            self.loadAccConst(heap_addr)
+        # elif val_type is 'boolean':
+        #     # load addr of bool in heap to acc
+        #     if node.children[1].name is 'true':
+        #         pass
+        #     elif node.children[1].name is 'false':
+        #         pass
+        # elif val_type is 'string':
+        #     heap_addr = self.addToHeap(node.children[1].children[0].name)
+        #     self.loadAccConst(heap_addr)
 
-        elif type is 'variable':
-            # Load the accumulator with the contents of the variable
-            temp_addr = self.getTempAddr(value)
-            self.loadAccMem(temp_addr)
+        # elif val_type is 'variable':
+        #     # Load the accumulator with the contents of the variable
+        #     temp_addr = self.getTempAddr(value)
+        #     self.loadAccMem(temp_addr)
 
-        temp_addr = self.getTempAddr(id)
+        
         self.storeAccMem(temp_addr)
         
         
 
     def generatePrintStatement(self, node):
-        # Get the type of the value
+        # TODO: check for BoolOp
+
+        val_type = self.generateExpr(node, 'Y')
+
+        if val_type is 'int':
+            self.loadXRegConst(self.hex(1))
+        else:
+            # string
+            self.loadXRegConst(self.hex(2))
+        self.sysCallPrint() 
+
+
+    def generateExpr(self, node, register):
         value = node.children[0].name
         val_type = self.getType(value)
-        
+
         if val_type is 'int':
-            # load y reg with value
-            self.loadYRegConst(value)
+            integer = int(value, 10)
+            self.loadRegConst(register, self.hex(integer))
+            return val_type
            
         elif val_type is 'string':
-            pass
+            string = node.children[0].children[0].name
+            if self.getPointer(value) is None:
+                self.addToHeap(string)
+                
+            pointer = self.getPointer(value)
+            # load the pointer into the Y reg
+            self.loadRegConst(register, pointer)
+            return val_type
+
         elif value is 'Add':
             print('Addd')
+        elif value is 'true':
+            return 'boolean'
+        elif value is 'false':
+            return 'boolean'
         elif val_type is 'variable':
-            # load the y reg from mem
             temp_addr = self.getTempAddr(value)
-            self.loadYRegMem(temp_addr)
-            
-            # var_type = self.getType(node.children[1].name)
-            # if var_type is 'int':
-            #     # load the X reg with 1
-            #     self.loadXRegConst('1')
-            # else:
-            # load the X reg with 2 
-            self.loadXRegConst('2')
+            self.loadRegMem(register, temp_addr)
+            # TODO: get type of var
+            return val_type
+
            
-            self.sysCallPrint() 
 
 
     ''' Op Codes '''
@@ -261,6 +304,22 @@ class CodeGenerator:
     # explanation for syntax: *variable...
     # it will unpack the contents of the var,
     # I use it often below for tuples and lists
+
+    def loadRegMem(self, reg, addr):
+        if reg is 'X':
+            self.loadXRegMem(addr)
+        elif reg is 'Y':
+            self.loadYRegMem(addr)
+        elif reg is 'Acc':
+            self.loadAccMem(addr)
+    
+    def loadRegConst(self, reg, const):
+        if reg is 'X':
+            self.loadXRegConst(const)
+        elif reg is 'Y':
+            self.loadYRegConst(const)
+        elif reg is 'Acc':
+            self.loadAccConst(const)
 
     # A9 -- Load the accumulator with a constant
     def loadAccConst(self, constant):
@@ -280,7 +339,7 @@ class CodeGenerator:
 
     # A2 -- Load the x register with a given constant
     def loadXRegConst(self, constant):
-        self.append(['A2', ('0'+constant)])
+        self.append(['A2', constant])
 
     # AE -- Load the x register from memory
     def loadXRegMem(self, addr):
@@ -288,7 +347,7 @@ class CodeGenerator:
 
     # A0 -- Load the y register with a given constant
     def loadYRegConst(self, constant):
-        self.append(['A0', ('0'+constant)])
+        self.append(['A0', constant])
 
     # AC -- Load the y register from memory
     def loadYRegMem(self, addr):
@@ -308,7 +367,7 @@ class CodeGenerator:
 
     # D0 -- if Z flag is 0, branch x number of bytes
     def branch(self, bytes):
-        self.append(['D0', bytes])
+        self.append(['D0', bytes]) 
 
     # EE -- Increment the value of a byte
     def inccByte(self, addr):
@@ -317,8 +376,3 @@ class CodeGenerator:
     # FF -- System Call...print
     def sysCallPrint(self):
         self.append('FF')
-
-
-
-        
-        
