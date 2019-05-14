@@ -1,4 +1,5 @@
 {
-    string a
-    a = "boob"
+    int a
+    a = 3
+    print(a)
 }

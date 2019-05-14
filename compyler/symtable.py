@@ -54,7 +54,7 @@ class SymbolTable:
         return self.__parent
 
     def get(self, key):
-        return self.__table.get(key)
+        return self.__table.get(key, None)
     
     # @symbol.setter
     def add(self, symbol, type, line):

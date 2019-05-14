@@ -78,11 +78,12 @@ class SemanticAnalyser:
     def getVariable(self, symbol, table):
         # lookup symbol in cur scope
         symbol_entry = table.get(symbol)
+       
         if symbol_entry is None:
             # this doesnt mean it doesnt exist, we need to check high scopes
             if table.parent != None:
                 self.log(f'Identifier: {symbol} not found in current scope, looking to parent scope.')
-                var_type = self.getVariable(symbol, table.parent)
+                var_type, scope = self.getVariable(symbol, table.parent)
                 return var_type, table.scope
             else:
                 # if none of the parents have it then it dont exist
@@ -150,7 +151,7 @@ class SemanticAnalyser:
             second_value_type, scope = self.getVariable(second_value.name, self.__cur_table)
         elif second_value_type == 'string':
             second_value = second_value.children[0]
-        
+
         if first_value_type != second_value_type:
             self.error(f'Type mismatch for Identifier: [{first_value.name}] with Value: {second_value.name}', 
             first_value.line, first_value.position)            
