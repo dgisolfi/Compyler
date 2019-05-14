@@ -2,6 +2,7 @@
 # 2019-4-18
 # Daniel Nicolas Gisolfi
 
+import re
 from error import Error
 from warning import Warning
 from termcolor import colored
@@ -136,15 +137,6 @@ class CodeGenerator:
     def hex(self, decimal):
         return ("0x%02X" % decimal).upper()[2:]
 
-    # def getVarType(self, variable):
-    #     search = True
-    #     while search:
-    #         print(self.)
-    #     if self.__static.get(variable):
-    #         return self.
-    #     else:
-    #         return None
-
     def getType(self, value):
         if value.isdigit():
             return 'int'
@@ -153,7 +145,7 @@ class CodeGenerator:
         elif value == 'CharList':
             return 'string'
         # Its a variable
-        else:
+        elif re.match(r'[a-z]', value):
             return 'variable'
 
     def backpatch(self):
@@ -227,11 +219,11 @@ class CodeGenerator:
         # Get the type of the assignment statement
         var = node.children[0].name
         value = node.children[1]
-        val_type = self.generateExpr(node.children[1], 'Acc')
+        val_type = self.generateExpr(value, 'Acc')
         
         if val_type is 'string':
             if self.getTempAddr(var) is None:
-                temp_addr = self.addStatic(node.children[0], 'string')
+                self.addStatic(node.children[0], 'string')
             
         temp_addr = self.getTempAddr(var)
         self.storeAccMem(temp_addr)
@@ -239,13 +231,21 @@ class CodeGenerator:
 
     def generatePrintStatement(self, node):
         # TODO: check for BoolOp
-        val_type = self.generateExpr(node.children[0], 'Y')
+        value = node.children[0]
+        if value.name == 'IsEqual':
+            self.generateIsEqualBoolean(value)
+            
+        elif value.name == 'NotEqual':
+            self.generateNotEqualBoolean(value)
 
-        if val_type is 'int':
-            self.loadXRegConst(self.hex(1))
         else:
-            # go to a memory location
-            self.loadXRegConst(self.hex(2))
+            val_type = self.generateExpr(value, 'Y')
+
+            if val_type is 'int':
+                self.loadXRegConst(self.hex(1))
+            else:
+                # go to a memory location
+                self.loadXRegConst(self.hex(2))
         self.sysCallPrint() 
 
 
@@ -273,19 +273,47 @@ class CodeGenerator:
         elif value is 'Add':
             print('Addd')
         elif value is 'true':
+            self.loadRegConst(register, self.hex(0))
             return 'boolean'
         elif value is 'false':
+            self.loadRegConst(register, self.hex(1))
             return 'boolean'
         elif val_type is 'variable':
-
             temp_entry = self.getTemp(value)
-
             temp_addr = self.getTempAddr(value)
             temp_type = temp_entry[1]
 
-            print(temp_addr)
             self.loadRegMem(register, temp_addr)
             return temp_type
+
+    def generateIsEqualBoolean(self, node):
+        variable_1 = node.children[0]
+        variable_2 = node.children[1]
+        
+        # If the first var is just a normal boolean 
+        # we can start generating code for it
+        if variable_1.name in  ['true', 'false']:
+            string = variable_1.name
+            # get the address of the value 'true' in memory
+            if self.getPointer(string) is None:
+                self.addToHeap(string)
+            pointer = self.getPointer(string)
+            # load the pointer as a constant
+            self.loadXRegConst(pointer)
+            self.loadAccConst(pointer)
+            temp_addr = self.addStatic(variable_1, 'boolean')
+            # Now store the pointer into the temp address
+            self.storeAccMem(temp_addr)
+            self.xRegCompare(temp_addr)
+        # Otherwise if it is and expresssion, we need to get the type of it
+        else:
+            variable_1_type = self.generateExpr(variable_1, 'X')
+            variable_2_type = self.getType(variable_2.name)
+      
+    
+    def generateNotEqualBoolean(self, node):
+    #   if node.name == 'NotEqual':
+        pass
 
            
     ''' Op Codes '''
