@@ -81,6 +81,7 @@ class CodeGenerator:
         self.progBreak()
         self.backpatch()
         self.mergeHeap()
+        print(self.__static)
         print(self)
 
         
@@ -138,13 +139,12 @@ class CodeGenerator:
         return ("0x%02X" % decimal).upper()[2:]
 
     def getType(self, value):
-        if value.isdigit():
+        if value.isdigit() and re.match(r'[0-9]', value):
             return 'int'
         elif value in ['true', 'false']:
             return 'boolean'
         elif value == 'CharList':
             return 'string'
-        # Its a variable
         elif re.match(r'[a-z]', value):
             return 'variable'
 
@@ -273,10 +273,16 @@ class CodeGenerator:
         elif value is 'Add':
             print('Addd')
         elif value is 'true':
-            self.loadRegConst(register, self.hex(0))
+            if self.getPointer(value) is None:
+                self.addToHeap(value)
+            pointer = self.getPointer(value)
+            self.loadRegConst(register, pointer)
             return 'boolean'
         elif value is 'false':
-            self.loadRegConst(register, self.hex(1))
+            if self.getPointer(value) is None:
+                self.addToHeap(value)
+            pointer = self.getPointer(value)
+            self.loadRegConst(register, pointer)
             return 'boolean'
         elif val_type is 'variable':
             temp_entry = self.getTemp(value)
@@ -287,13 +293,14 @@ class CodeGenerator:
             return temp_type
 
     def generateIsEqualBoolean(self, node):
+        print()
         variable_1 = node.children[0]
         variable_2 = node.children[1]
         
         # If the first var is just a normal boolean 
         # we can start generating code for it
-        if variable_1.name in  ['true', 'false']:
-            string = variable_1.name
+        if node.name in ['true', 'false']:
+            string = node.name
             # get the address of the value 'true' in memory
             if self.getPointer(string) is None:
                 self.addToHeap(string)
@@ -304,16 +311,68 @@ class CodeGenerator:
             temp_addr = self.addStatic(variable_1, 'boolean')
             # Now store the pointer into the temp address
             self.storeAccMem(temp_addr)
-            self.xRegCompare(temp_addr)
+            
         # Otherwise if it is and expresssion, we need to get the type of it
         else:
-            variable_1_type = self.generateExpr(variable_1, 'X')
-            variable_2_type = self.getType(variable_2.name)
+           temp_addr = self.generateBooleanExpr(variable_1, variable_2)
+
+        self.xRegCompare(temp_addr)
       
     
     def generateNotEqualBoolean(self, node):
     #   if node.name == 'NotEqual':
         pass
+
+    def generateBooleanExpr(self, variable_1, variable_2):
+        variable_1_type = self.generateExpr(variable_1, 'X')
+        variable_2_type = self.getType(variable_2.name)
+        
+        print(variable_1.name, variable_2.name)
+
+        if variable_2.name == 'Add':
+            pass
+
+        if variable_2_type in ['true', 'false']:
+           
+            string = variable_2.name
+            # get the address of the boolean value in memory
+            if self.getPointer(string) is None:
+                # add it to the heap if its not present
+                self.addToHeap(string)
+            # get a pointer to its address in memeory
+            pointer = self.getPointer(string)
+
+            # take the pointer and store it in the static variable location
+            self.loadAccConst(pointer)
+            temp_addr = self.addStatic(variable_2, 'boolean')
+            self.storeAccMem(temp_addr)
+
+        elif variable_2_type == 'string':
+            string = variable_2.name
+            # check if the string has already been stored in the heap
+            if self.getPointer(string) is None:
+                # if not add to the heap
+                self.addToHeap(string)
+            # wether just added or already found, grab the pointer to the 
+            # string in the heap
+            pointer = self.getPointer(string)
+            
+            # Store the pointer to the string in the static location for that value
+            self.loadAccConst(pointer)
+            temp_addr = self.addStatic(variable_2, 'string')
+            self.storeAccMem(temp_addr)
+
+        elif variable_2_type == 'int':
+            integer = int(variable_2.name)
+            self.loadAccConst(self.hex(integer))
+            temp_addr = self.addStatic(variable_2, 'boolean')
+            self.storeAccMem(temp_addr)
+
+        elif variable_2_type == 'variable':
+            temp_addr = self.getTempAddr(variable_2.name)
+
+        return temp_addr
+
 
            
     ''' Op Codes '''
