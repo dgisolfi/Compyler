@@ -102,13 +102,12 @@ class CodeGenerator:
         scope = self.__scope
         symbol_table = self.__cur_symtable
         while scope is not -1:
-            print(scope)
             if symbol_table.get(var) is not None:
-                print(f'{var}@{scope}')
                 return self.__static.get(f'{var}@{scope}', None)
             else:
                 symbol_table = symbol_table.parent
                 scope -= 1
+        return None
 
     def getTempAddr(self, var):
         # If the addr exists at the current scope level,
@@ -215,34 +214,32 @@ class CodeGenerator:
     def generateVarDecleration(self, node):
         var = node.children[1]
         var_type = node.children[0].name
-        print(var_type)
+        temp_addr = self.addStatic(var, var_type)
+        
         if var_type != 'string':
             # Load the accumulator with 0
             self.loadAccConst('00')
             # Store the accumulator in temp location 
             # Add new temp value to static table
-            temp_addr = self.addStatic(var, var_type)
             self.storeAccMem(temp_addr)
 
     def generateAssignmentStatement(self, node):
         # Get the type of the assignment statement
         var = node.children[0].name
+        value = node.children[1]
         val_type = self.generateExpr(node.children[1], 'Acc')
-
+        
         if val_type is 'string':
             if self.getTempAddr(var) is None:
                 temp_addr = self.addStatic(node.children[0], 'string')
-        else:
-            temp_addr = self.getTempAddr(var)
-
+            
+        temp_addr = self.getTempAddr(var)
         self.storeAccMem(temp_addr)
         
 
     def generatePrintStatement(self, node):
         # TODO: check for BoolOp
-
         val_type = self.generateExpr(node.children[0], 'Y')
-        # print(val_type)
 
         if val_type is 'int':
             self.loadXRegConst(self.hex(1))
@@ -280,17 +277,17 @@ class CodeGenerator:
         elif value is 'false':
             return 'boolean'
         elif val_type is 'variable':
-            # print(value)
-            # print(self.__static)
-            temp_addr = self.getTempAddr(value)
 
+            temp_entry = self.getTemp(value)
+
+            temp_addr = self.getTempAddr(value)
+            temp_type = temp_entry[1]
+
+            print(temp_addr)
             self.loadRegMem(register, temp_addr)
-            # TODO: get type of var
-            return self.getTemp(value)[1]
+            return temp_type
 
            
-
-
     ''' Op Codes '''
     # some of these op codes have no reason to be there own methods
     # however it makes everything easier to read
