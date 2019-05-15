@@ -15,10 +15,12 @@ class CodeGenerator:
         self.__heap = []
         self.__static = {}
         self.__dynamic = {}
+        self.__jump = {}
         self.__scope = -1
         self.__cur_symtable = symtable
   
         self.__temp_addr_count = 0
+        self.__jump_count = 0
         self.verbose = verbose
         self.errors = 0
         self.warnings = 0
@@ -91,14 +93,22 @@ class CodeGenerator:
     def addStatic(self, var, var_type):
         # stealing format of var@scope from alans example because there 
         # is no cleaner way to represent this.
-        key =  f'{var.name}@{str(self.__scope)}'
+        key =  f'{var}@{str(self.__scope)}'
         temp_addr = f'T{self.__temp_addr_count}XX'
-        offset = len(self.__static)
+        offset = len(self.__static)+1
 
         self.__static[key] = [temp_addr, var_type, offset]
         self.__temp_addr_count += 1
         return temp_addr[:2], temp_addr[2:]
 
+    def addJump(self):
+        self.__jump_count
+        key = f'J{self.__jump_count}'
+        self.__jump[key] = 0
+        self.branch(key)
+        jump_distance = len(self.code)-1
+        self.__jump_count += 1
+        return jump_distance
 
     def getTemp(self, var):
         scope = self.__scope
@@ -128,7 +138,7 @@ class CodeGenerator:
             self.__heap.append(self.hex(ord(char)))
         # The string terminator
         self.__heap.append('00')
-        pointer = self.hex(255-len(self.__heap)+1)
+        pointer = self.hex(255-(len(self.__heap)+1))
         self.__dynamic[string] = pointer
         return pointer
 
@@ -206,7 +216,7 @@ class CodeGenerator:
     def generateVarDecleration(self, node):
         var = node.children[1]
         var_type = node.children[0].name
-        temp_addr = self.addStatic(var, var_type)
+        temp_addr = self.addStatic(var.name, var_type)
         
         if var_type != 'string':
             # Load the accumulator with 0
@@ -223,7 +233,7 @@ class CodeGenerator:
         
         if val_type is 'string':
             if self.getTempAddr(var) is None:
-                self.addStatic(node.children[0], 'string')
+                self.addStatic(node.children[0].name, 'string')
             
         temp_addr = self.getTempAddr(var)
         self.storeAccMem(temp_addr)
@@ -232,11 +242,39 @@ class CodeGenerator:
     def generatePrintStatement(self, node):
         # TODO: check for BoolOp
         value = node.children[0]
-        if value.name == 'IsEqual':
+        if value.name in ['IsEqual', 'NotEqual']:
             self.generateIsEqualBoolean(value)
+            if value.name == 'NotEqual':
+                self.generateNotEqualBoolean(value)
+
+            # before doing
+            # get the address of the value 'true' in memory
+            if self.getPointer('true') is None:
+                self.addToHeap('true')
+            true_pointer = self.getPointer('true')
+            if self.getPointer('false') is None:
+                self.addToHeap('false')
+            false_pointer = self.getPointer('false')
+
+            # add a jump entry to the table
+            jump1 = self.addJump()
+
+            self.loadYRegConst(true_pointer)
+            self.loadXRegConst(self.hex(2))
+            self.sysCallPrint()
             
-        elif value.name == 'NotEqual':
-            self.generateNotEqualBoolean(value)
+            self.loadXRegConst(self.hex(2))
+            self.loadAccConst(self.hex(1))
+            temp_addr = self.addStatic(f'CompVal{self.__temp_addr_count}', 'int')
+            self.storeAccMem(temp_addr)
+            self.xRegCompare(temp_addr)
+            jump2 = self.addJump()
+            self.code[jump2] = self.hex(5)
+            self.code[jump1] = self.hex((len(self.code)-1) - jump1)
+        
+            self.loadYRegConst(false_pointer)
+            self.loadXRegConst(self.hex(2))
+            self.sysCallPrint()
 
         else:
             val_type = self.generateExpr(value, 'Y')
@@ -246,7 +284,7 @@ class CodeGenerator:
             else:
                 # go to a memory location
                 self.loadXRegConst(self.hex(2))
-        self.sysCallPrint() 
+            self.sysCallPrint() 
 
 
     def generateExpr(self, node, register):
@@ -273,16 +311,10 @@ class CodeGenerator:
         elif value is 'Add':
             print('Addd')
         elif value is 'true':
-            if self.getPointer(value) is None:
-                self.addToHeap(value)
-            pointer = self.getPointer(value)
-            self.loadRegConst(register, pointer)
+            self.loadRegConst(register, self.hex(1))
             return 'boolean'
         elif value is 'false':
-            if self.getPointer(value) is None:
-                self.addToHeap(value)
-            pointer = self.getPointer(value)
-            self.loadRegConst(register, pointer)
+            self.loadRegConst(register, self.hex(0))
             return 'boolean'
         elif val_type is 'variable':
             temp_entry = self.getTemp(value)
@@ -293,7 +325,6 @@ class CodeGenerator:
             return temp_type
 
     def generateIsEqualBoolean(self, node):
-        print()
         variable_1 = node.children[0]
         variable_2 = node.children[1]
         
@@ -308,7 +339,7 @@ class CodeGenerator:
             # load the pointer as a constant
             self.loadXRegConst(pointer)
             self.loadAccConst(pointer)
-            temp_addr = self.addStatic(variable_1, 'boolean')
+            temp_addr = self.addStatic(variable_1.name, 'boolean')
             # Now store the pointer into the temp address
             self.storeAccMem(temp_addr)
             
@@ -332,7 +363,7 @@ class CodeGenerator:
         if variable_2.name == 'Add':
             pass
 
-        if variable_2_type in ['true', 'false']:
+        if variable_2_type == 'boolean':
            
             string = variable_2.name
             # get the address of the boolean value in memory
@@ -344,7 +375,7 @@ class CodeGenerator:
 
             # take the pointer and store it in the static variable location
             self.loadAccConst(pointer)
-            temp_addr = self.addStatic(variable_2, 'boolean')
+            temp_addr = self.addStatic(string, 'boolean')
             self.storeAccMem(temp_addr)
 
         elif variable_2_type == 'string':
@@ -359,13 +390,13 @@ class CodeGenerator:
             
             # Store the pointer to the string in the static location for that value
             self.loadAccConst(pointer)
-            temp_addr = self.addStatic(variable_2, 'string')
+            temp_addr = self.addStatic(string, 'string')
             self.storeAccMem(temp_addr)
 
         elif variable_2_type == 'int':
             integer = int(variable_2.name)
             self.loadAccConst(self.hex(integer))
-            temp_addr = self.addStatic(variable_2, 'boolean')
+            temp_addr = self.addStatic(variable_2.name, 'int')
             self.storeAccMem(temp_addr)
 
         elif variable_2_type == 'variable':
@@ -398,6 +429,26 @@ class CodeGenerator:
             self.loadYRegConst(const)
         elif reg is 'Acc':
             self.loadAccConst(const)
+
+    # def loadExpr(self, node):
+    #     if node.name == 'ADD':
+    #         pass
+
+    #     expr_type = self.getType(node.name)
+        
+    #     if expr_type == 'string':
+    #         string = node.name
+    #         # check if the string has already been stored in the heap
+    #         if self.getPointer(string) is None:
+    #             # if not add to the heap
+    #             self.addToHeap(string)
+    #         # wether just added or already found, grab the pointer to the 
+    #         # string in the heap
+    #         pointer = self.getPointer(string)
+    #         self.loadXRegConst(pointer)
+    #     elif expr_type == 'int':
+
+    #         self.loadXRegConst()
 
     # A9 -- Load the accumulator with a constant
     def loadAccConst(self, constant):
