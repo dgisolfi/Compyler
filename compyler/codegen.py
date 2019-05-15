@@ -385,7 +385,7 @@ class CodeGenerator:
             self.storeAccMem(temp_addr)
 
         elif variable_2_type == 'string':
-            string = variable_2.name
+            string = variable_2.children[0].name
             # check if the string has already been stored in the heap
             if self.getPointer(string) is None:
                 # if not add to the heap
