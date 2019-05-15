@@ -1,7 +1,5 @@
 {
-    string a
-    a = "fuck me this is so hard"
-    print(a)
-    print(" cool")
-    
+    int a
+    a = 4
+    print((a == 3))
 }

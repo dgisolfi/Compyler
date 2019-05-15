@@ -272,8 +272,9 @@ class CodeGenerator:
             self.storeAccMem(temp_addr)
             self.xRegCompare(temp_addr)
             jump2 = self.addJump()
+            # jump 5 ahead to the FF call
             self.code[jump2] = self.hex(5)
-            self.code[jump1] = self.hex((len(self.code)-1) - jump1)
+            self.code[jump1] = self.hex((len(self.code) - jump1) - 1)
         
             self.loadYRegConst(false_pointer)
             self.loadXRegConst(self.hex(2))
