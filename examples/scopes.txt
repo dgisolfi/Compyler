@@ -1,3 +1,7 @@
 {
-    print((false == true))
+    string a
+    a = "fuck me this is so hard"
+    print(a)
+    print(" cool")
+    
 }

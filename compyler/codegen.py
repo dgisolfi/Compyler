@@ -134,11 +134,14 @@ class CodeGenerator:
             return temp_addr[:2], temp_addr[2:]
 
     def addToHeap(self, string):
+        hex_string = []
         for char in string:
-            self.__heap.append(self.hex(ord(char)))
+            hex_string.append(self.hex(ord(char)))
         # The string terminator
-        self.__heap.append('00')
-        pointer = self.hex(255-(len(self.__heap)+1))
+        hex_string.append('00')
+        self.__heap = hex_string + self.__heap
+
+        pointer = self.hex(255-len(self.__heap)+1)
         self.__dynamic[string] = pointer
         return pointer
 
@@ -304,6 +307,8 @@ class CodeGenerator:
                 self.addToHeap(string)
 
             pointer = self.getPointer(string)
+            print(self.__heap)
+            print(pointer)
             # load the pointer into the Y reg
             self.loadRegConst(register, pointer)
             return val_type
