@@ -16,6 +16,7 @@ from semantics import SemanticAnalyser
 from codegen import CodeGenerator
 
 
+
 # Remove those pesky comments before even lexing
 def removeComments(code):
     code = re.sub(r'\/\*[^\*]*\*\/', '', code)

@@ -2,6 +2,7 @@
 # 2019-3-24
 # Daniel Nicolas Gisolfi
 
+
 import re
 from ast import AST
 from tree import Tree
@@ -89,6 +90,7 @@ class SemanticAnalyser:
             if table.parent != None:
                 self.log(f'Identifier: {symbol} not found in current scope, looking to parent scope.')
                 var_type, scope = self.getVariable(symbol, table.parent)
+
                 return var_type, table.scope
             else:
                 # if none of the parents have it then it dont exist
@@ -200,7 +202,7 @@ class SemanticAnalyser:
     def checkVarDecleration(self, node):
         self.log(f'Checking {node.name}')
         self.log(f'Adding [{node.children[0].name} {node.children[1].name}] to Symbol Table')
-        
+
         var_type, scope = self.getVariable(node.children[1].name, self.__cur_table)
         if var_type is not None and scope is not self.__cur_table.scope:
             self.error(f'Attempt to redeclare variable [{node.children[1].name}]', 
