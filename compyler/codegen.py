@@ -246,12 +246,10 @@ class CodeGenerator:
         # TODO: check for BoolOp
         value = node.children[0]
         if value.name in ['IsEqual', 'NotEqual']:
-            self.generateIsEqualBoolean(value)
-            if value.name == 'NotEqual':
-                self.generateNotEqualBoolean(value)
-
-            # before doing
-            # get the address of the value 'true' in memory
+            self.generateBooleanExpr(value)
+        
+            # before doing anything get a pointer 
+            # to each of the values in memory
             if self.getPointer('true') is None:
                 self.addToHeap('true')
             true_pointer = self.getPointer('true')
@@ -293,9 +291,7 @@ class CodeGenerator:
     def generateIfStatement(self, node):
         bool_expr = node.children[0]
         block = node.children[1]
-        self.generateIsEqualBoolean(bool_expr)
-        if bool_expr.name == 'NotEqual':
-            self.generateNotEqualBoolean(bool_expr)
+        self.generateBooleanExpr(bool_expr)
 
         jump = self.addJump()
         self.generateBlock(block)
@@ -305,9 +301,7 @@ class CodeGenerator:
         bool_expr = node.children[0]
         block = node.children[1]
         destination = len(self.code)
-        self.generateIsEqualBoolean(bool_expr)
-        if bool_expr.name == 'NotEqual':
-            self.generateNotEqualBoolean(bool_expr)
+        self.generateBooleanExpr(bool_expr)
 
         jump1 = self.addJump()
         self.generateBlock(block)
@@ -345,13 +339,32 @@ class CodeGenerator:
             return val_type
 
         elif value is 'Add':
-            print('Addd')
+            pass
+
         elif value is 'true':
-            self.loadRegConst(register, self.hex(1))
+            string = value
+            # get the address of the boolean value in memory
+            if self.getPointer(string) is None:
+                # add it to the heap if its not present
+                self.addToHeap(string)
+            # get a pointer to its address in memeory
+            pointer = self.getPointer(string)
+
+            self.loadRegConst(register, pointer)
             return 'boolean'
+
         elif value is 'false':
-            self.loadRegConst(register, self.hex(0))
+            string = value
+            # get the address of the boolean value in memory
+            if self.getPointer(string) is None:
+                # add it to the heap if its not present
+                self.addToHeap(string)
+            # get a pointer to its address in memeory
+            pointer = self.getPointer(string)
+
+            self.loadRegConst(register, pointer)
             return 'boolean'
+
         elif val_type is 'variable':
             temp_entry = self.getTemp(value)
             temp_addr = self.getTempAddr(value)
@@ -360,47 +373,29 @@ class CodeGenerator:
             self.loadRegMem(register, temp_addr)
             return temp_type
 
-    def generateIsEqualBoolean(self, node):
-        variable_1 = node.children[0]
-        variable_2 = node.children[1]
+    def generateBooleanExpr(self, node):
+        left_expr = node.children[0]
+        right_expr = node.children[1]
         
-        # If the first var is just a normal boolean 
-        # we can start generating code for it
-        if node.name in ['true', 'false']:
-            string = node.name
-            # get the address of the value 'true' in memory
-            if self.getPointer(string) is None:
-                self.addToHeap(string)
-            pointer = self.getPointer(string)
-            # load the pointer as a constant
-            self.loadXRegConst(pointer)
-            self.loadAccConst(pointer)
-            temp_addr = self.addStatic(variable_1.name, 'boolean')
-            # Now store the pointer into the temp address
-            self.storeAccMem(temp_addr)
-            
-        # Otherwise if it is and expresssion, we need to get the type of it
-        else:
-           temp_addr = self.generateBooleanExpr(variable_1, variable_2)
+        # check for nested boolean expressions
+        if left_expr.name in ['IsEqual', 'NotEqual']:
+            # there is a nested boolexpr
+            self.generateBooleanExpr(left_expr)
+        if right_expr.name in ['IsEqual', 'NotEqual']:
+            # there is a nested boolexpr
+            self.generateBooleanExpr(right_expr)
 
-        self.xRegCompare(temp_addr)
-      
-    
-    def generateNotEqualBoolean(self, node):
-    #   if node.name == 'NotEqual':
-        pass
+        # otherwise generate the first expression as a normal expr
+        self.generateExpr(left_expr, 'X')
+        right_expr_type = self.getType(right_expr.name)
 
-    def generateBooleanExpr(self, variable_1, variable_2):
-        variable_1_type = self.generateExpr(variable_1, 'X')
-        variable_2_type = self.getType(variable_2.name)
+        # the right expression is not as easy, generate the needed code below
         
-        print(variable_1.name, variable_2.name)
-
-        if variable_2.name == 'Add':
+        if right_expr.name == 'Add':
             pass
 
-        if variable_2_type == 'boolean':
-            string = variable_2.name
+        if right_expr_type == 'boolean':
+            string = right_expr.name
 
             # get the address of the boolean value in memory
             if self.getPointer(string) is None:
@@ -412,10 +407,10 @@ class CodeGenerator:
             # take the pointer and store it in the static variable location
             self.loadAccConst(pointer)
             temp_addr = self.addStatic(string, 'boolean')
-            self.storeAccMem(temp_addr)
+            self.storeAccMem(temp_addr) 
 
-        elif variable_2_type == 'string':
-            string = variable_2.children[0].name
+        elif right_expr_type == 'string':
+            string = right_expr.children[0].name
             # check if the string has already been stored in the heap
             if self.getPointer(string) is None:
                 # if not add to the heap
@@ -429,17 +424,31 @@ class CodeGenerator:
             temp_addr = self.addStatic(string, 'string')
             self.storeAccMem(temp_addr)
 
-        elif variable_2_type == 'int':
-            integer = int(variable_2.name)
+        elif right_expr_type == 'int':
+            integer = int(right_expr.name)
             self.loadAccConst(self.hex(integer))
-            temp_addr = self.addStatic(variable_2.name, 'int')
+            temp_addr = self.addStatic(right_expr.name, 'int')
             self.storeAccMem(temp_addr)
+        elif right_expr_type == 'variable':
+            print('id')
+            temp_addr = self.getTempAddr(right_expr.name)
 
-        elif variable_2_type == 'variable':
-            temp_addr = self.getTempAddr(variable_2.name)
+        self.xRegCompare(temp_addr)
 
-        return temp_addr
+        # Add additional jump for a not equal case
+        if node.name == 'NotEqual':
+            self.generateNotEqualExpr()
 
+    def generateNotEqualExpr(self):
+        self.loadAccConst(self.hex(0))
+        jump = self.addJump()
+        # jump ahead 2 to the FF call
+        self.code[jump] = self.hex(2)
+        self.loadAccConst(self.hex(1))
+        temp_addr = self.addStatic(f'CompVal{self.__temp_addr_count}', 'int')
+        self.storeAccMem(temp_addr)
+        self.loadXRegConst(self.hex(0))
+        self.xRegCompare(temp_addr)
 
            
     ''' Op Codes '''
@@ -465,26 +474,6 @@ class CodeGenerator:
             self.loadYRegConst(const)
         elif reg is 'Acc':
             self.loadAccConst(const)
-
-    # def loadExpr(self, node):
-    #     if node.name == 'ADD':
-    #         pass
-
-    #     expr_type = self.getType(node.name)
-        
-    #     if expr_type == 'string':
-    #         string = node.name
-    #         # check if the string has already been stored in the heap
-    #         if self.getPointer(string) is None:
-    #             # if not add to the heap
-    #             self.addToHeap(string)
-    #         # wether just added or already found, grab the pointer to the 
-    #         # string in the heap
-    #         pointer = self.getPointer(string)
-    #         self.loadXRegConst(pointer)
-    #     elif expr_type == 'int':
-
-    #         self.loadXRegConst()
 
     # A9 -- Load the accumulator with a constant
     def loadAccConst(self, constant):
