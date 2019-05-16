@@ -1,10 +1,11 @@
-
 #!/usr/bin/python3
+# Daniel Nicolas Gisolfi
+
 from setuptools import setup
 
 setup(
     name='Compyler',
-    version='0.3.2',
+    version='0.4.0',
     description='Compiler for Spring 2019 Compilers Course, implemented in python.'+ 
     'Compiles a custom language into a subset of the 6502 opcodes.',
     long_description=open('README.md').read(),

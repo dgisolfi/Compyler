@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-2-12
+# Daniel Nicolas Gisolfi
 
 class Node:
     def __init__(self, name, parent, nid, kind, line, pos):
@@ -20,6 +21,10 @@ class Node:
     def name(self):
         return self.__name
     
+    @name.setter
+    def name(self, name):
+        self.__name = name
+
     @property
     def children(self):
         return self.__children

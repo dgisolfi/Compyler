@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-1-22
+# Daniel Nicolas Gisolfi
 
 class Token:
     def __init__(self, kind, value, line, pos):

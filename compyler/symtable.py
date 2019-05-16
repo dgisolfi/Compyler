@@ -1,23 +1,25 @@
 #!/usr/bin/python3
 # 2019-4-09
+# Daniel Nicolas Gisolfi
 
 from beautifultable import BeautifulTable
 
 class SymbolTable:
-    def __init__(self, parent, scope):
+    def __init__(self, parent, scope, level):
         # HashMap -- Python dictionaries are hashmaps
         self.__table = {};
         self.__parent = parent
         self.__children = []
         self.__scope = scope
+        self.__scope_level = level
         self.pretty_table = BeautifulTable()
         self.count = 0
 
     def __repr__(self):
-        return self.__str__()
+        return f'{self.__scope}'
 
     def __str__(self):
-        self.pretty_table.column_headers = ['Symbol', 'Type', 'Scope', 'Line']
+        self.pretty_table.column_headers = ['Symbol', 'Type', 'Scope', 'Scope Level', 'Line']
         self.__printTable(self)
         print(self.pretty_table)
         return ''
@@ -34,7 +36,7 @@ class SymbolTable:
     def __buildTable(self, symbol_table):
         for var in symbol_table.table:
             var_details = symbol_table.table[var]
-            self.pretty_table.append_row([var, var_details[0], symbol_table.scope, var_details[1]])
+            self.pretty_table.append_row([var, var_details[0], symbol_table.scope, symbol_table.__scope_level ,var_details[1]])
 
     @property
     def table(self):
@@ -49,11 +51,15 @@ class SymbolTable:
         return self.__scope
 
     @property
+    def scope_level(self):
+        return self.__scope_level
+
+    @property
     def parent(self):
         return self.__parent
 
     def get(self, key):
-        return self.__table.get(key)
+        return self.__table.get(key, None)
     
     # @symbol.setter
     def add(self, symbol, type, line):

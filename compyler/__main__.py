@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 # 2019-1-22
+# Daniel Nicolas Gisolfi
 
-ver='0.3.2'
+ver='0.4.0'
 package='compyler'
 
 import re
@@ -12,6 +13,8 @@ from error import Error
 from lexer import Lexer
 from parser import Parser
 from semantics import SemanticAnalyser
+from codegen import CodeGenerator
+
 
 
 # Remove those pesky comments before even lexing
@@ -34,13 +37,15 @@ def replaceTabs(code):
     '--prettytree', '-p', is_flag=True,
     help='Outputs CST and AST in a fancier form.'
 )
-def main(path, verbose, prettytree):
-    # Overwrite the flag for verbose until alan is sick of seeing it
-    verbose = True
+@click.option(
+    '--optimize', '-o', is_flag=True,
+    help='Implements optimizations for source code.'
+)
+def main(path, verbose, prettytree, optimize):
     
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
     # Gotta include the emoji just because Alan said not to
-    print(colored(f'\n{package} v{ver} 🐍', 'blue'))
+    print(colored(f'\n{package} v{ver} 🐍', 'blue', attrs=['bold']))
 
     source_code = getFile(path)
 
@@ -71,7 +76,7 @@ def main(path, verbose, prettytree):
             # to be accessed at 0)
             lex = Lexer(code, verbose, program+1)
             if lex.errors is not 0:
-                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed\n', 'blue'))
+                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed\n', 'cyan', attrs=['bold']))
                 program += 1
                 continue
 
@@ -83,12 +88,12 @@ def main(path, verbose, prettytree):
             parse = Parser(tokens,verbose, prettytree, program+1)
            
             if parse.errors is not 0:
-                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'blue'))
+                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'magenta', attrs=['bold']))
                 program += 1
                 continue
 
             if verbose:
-                print(colored(f'CST for Program {parse.program}.\n', 'blue'))
+                print(colored(f'CST for Program {parse.program}.\n', 'magenta', attrs=['bold']))
                 print(parse.cst)
             
             errors += parse.errors
@@ -96,22 +101,35 @@ def main(path, verbose, prettytree):
             semanticAnalyser = SemanticAnalyser(verbose, prettytree, program+1, parse.cst)
            
             if semanticAnalyser.errors is not 0:
-                print(colored(f'Skipping AST and Symbol Table Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'blue'))
+                print(colored(f'Skipping AST and Symbol Table Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'white', attrs=['bold']))
                 program += 1
                 continue
 
             if verbose:
-                print(colored(f'\nAST for Program {program+1}.', 'blue'))
+                print(colored(f'\nAST for Program {program+1}.', 'green', attrs=['bold']))
                 print(semanticAnalyser.ast)
-                print(colored(f'Symbol Table for Program {program+1}.', 'blue'))
+                print(colored(f'Symbol Table for Program {program+1}.', 'green', attrs=['bold']))
                 print(semanticAnalyser.symbol_table)
             
             errors += semanticAnalyser.errors
             warnings += semanticAnalyser.warnings
 
-            print(colored(f'Program {program+1} compiled with {errors} errors and {warnings} warnings.', 'blue'))
+            codeGenerator = CodeGenerator(verbose, program+1, semanticAnalyser.ast,semanticAnalyser.symbol_table)
+
+            if codeGenerator.errors is not 0:
+                print(colored(f'Skipping Machine Code output for Program {codeGenerator.program}. Code Generatoration Failed\n', 'white', attrs=['bold']))
+                program += 1
+                continue
+
+            print(colored(f'Machine Code for Program {program+1}.', 'blue', attrs=['bold']))
+            print(codeGenerator)
+            
+            errors += codeGenerator.errors
+            warnings += codeGenerator.warnings
+
+            print(colored(f'Program {program+1} compiled with {errors} errors and {warnings} warnings.', 'white', attrs=['bold']))
             program += 1
-           
+
     
     except KeyboardInterrupt:
         print(colored('KeyboardInterrupt', 'red'))

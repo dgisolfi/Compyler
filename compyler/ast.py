@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-3-24
+# Daniel Nicolas Gisolfi
 
 class AST:
     def __init__(self, cst, ast):
@@ -120,7 +121,6 @@ class AST:
         elif kind == 'BooleanExpr':
             if len(node.children[0].children) > 1:
                 self.traverseBooleanExprStatement(node.children[0])
-                self.__ast.cutOffChildren()
             else:
                 self.__ast.addNode(leaves[0].name, 'leaf',
                 line=leaves[0].line, pos=leaves[0].position)

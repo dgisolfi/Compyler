@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-2-12
+# Daniel Nicolas Gisolfi
 
 from tree import Tree
 from error import Error
@@ -37,7 +38,7 @@ class Parser:
         if self.errors > 0:
             print(colored(f'Parse Failed for Program {self.program}.\n', 'red'))
         else:
-            print(colored(f'Parse Completed for Program {self.program}.\n', 'blue'))
+            print(colored(f'Parse Completed for Program {self.program}.\n', 'magenta', attrs=['bold']))
 
     def logProduction(self, fn):
         if self.verbose and self.errors is 0:
@@ -45,7 +46,7 @@ class Parser:
     
     ''' All productions to preform "derivations" '''
     def parse(self):
-        print(colored(f'Parsing Program {self.program}', 'blue'))
+        print(colored(f'Parsing Program {self.program}', 'magenta', attrs=['bold']))
         self.logProduction('parse()')
         self.cst.addNode('program', 'branch')
 

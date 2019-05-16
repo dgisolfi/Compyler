@@ -38,6 +38,8 @@ Once setup has been completed an Alan++ source code file can be compiled. To do 
 
 0.3.2 - [Project3](https://github.com/dgisolfi/Compyler/tree/Project3)
 
+0.4.0 - [Project4](https://github.com/dgisolfi/Compyler/tree/Project4)
+
 ## Developing
 
 To develop the compyler it would be a nuisance to install each time a change is made, to avoid this use a python virtual environment. To create a Virtual environment or venv use the following command `python3 -m venv/path/to/new/virtual/environment` The path should be pointed at this repository. To enter a venv that already exists navigate to the bin dir inside of env and run `source activate`. In the case of this repo the command would look like this, `source ./env/bin/activate`.

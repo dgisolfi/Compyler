@@ -2,6 +2,8 @@
 # 2019-3-24
 # Daniel Nicolas Gisolfi
 
+
+import re
 from ast import AST
 from tree import Tree
 from error import Error
@@ -19,7 +21,9 @@ class SemanticAnalyser:
         self.verbose = verbose
         self.__symbol_table = None
         self.__cur_table = None
-        print(colored(f'Analyzing Program {self.program}', 'white', attrs=['bold']))
+        self.__scope = -1
+        self.__cur_scope_level = -1
+        print(colored(f'Analyzing Program {self.program}', 'green', attrs=['bold']))
         self.genAST()
         self.log('Building Symbol Table')
         self.analyze(self.__ast.root)
@@ -29,6 +33,7 @@ class SemanticAnalyser:
             self.log('Checking for Uninitialized Variables')
             self.checkUninitializedVariables(self.__symbol_table)
             self.log('Done.')
+            print(colored(f'Analysis Completed for Program {self.program}', 'green', attrs=['bold']))
     
     @property
     def ast(self):
@@ -73,16 +78,19 @@ class SemanticAnalyser:
         # parent once the block has been analyzed
         if node.name == 'Block':
             self.__cur_table = self.__cur_table.parent
+            self.__cur_scope_level -= 1
 
 
     def getVariable(self, symbol, table):
         # lookup symbol in cur scope
         symbol_entry = table.get(symbol)
+       
         if symbol_entry is None:
             # this doesnt mean it doesnt exist, we need to check high scopes
             if table.parent != None:
                 self.log(f'Identifier: {symbol} not found in current scope, looking to parent scope.')
-                var_type = self.getVariable(symbol, table.parent)
+                var_type, scope = self.getVariable(symbol, table.parent)
+
                 return var_type, table.scope
             else:
                 # if none of the parents have it then it dont exist
@@ -92,14 +100,13 @@ class SemanticAnalyser:
             return symbol_entry[0], None
 
     def getType(self, value):
-        if value.isdigit():
+        if value.isdigit() and re.match(r'[0-9]', value):
             return 'int'
-        elif value in ['true', 'false']:
+        elif value in ['true', 'false', 'IsEqual', 'NotEqual']:
             return 'boolean'
         elif value == 'CharList':
             return 'string'
-        # Its a variable
-        else:
+        elif re.match(r'[a-z]', value):
             return 'variable'
            
     def markAsUsed(self, symbol, table):
@@ -150,22 +157,26 @@ class SemanticAnalyser:
             second_value_type, scope = self.getVariable(second_value.name, self.__cur_table)
         elif second_value_type == 'string':
             second_value = second_value.children[0]
-        
+
         if first_value_type != second_value_type:
             self.error(f'Type mismatch for Identifier: [{first_value.name}] with Value: {second_value.name}', 
             first_value.line, first_value.position)            
         
     def checkBlock(self, node):
         self.log(f'Checking {node.name}')
+        self.__scope += 1
+        self.__cur_scope_level += 1
+        
         if self.__symbol_table is None:
-            self.__symbol_table = SymbolTable(SymbolTable(None, -1), 0)
+            self.__symbol_table = SymbolTable(SymbolTable(None, -1, -1), 0, self.__cur_scope_level)
             self.__cur_table = self.__symbol_table
         else:
             self.log(f'New Scope Detected')
             # New Block means new scope
             self.__cur_table = SymbolTable(
                 self.__cur_table,
-                self.__cur_table.scope+1
+                self.__scope,
+                self.__cur_scope_level
             )
             self.__cur_table.parent.addChild(self.__cur_table)
 
@@ -256,44 +267,33 @@ class SemanticAnalyser:
     def checkBooleanExpr(self, node):
         self.log(f'Checking Boolean Expression')
 
-        # a BooleanExpr can also just be a true or false,
-        # we dont need to check anything with that though
         if not node.name in ['true', 'false']:
 
             if node.children[0].name in ['IsEqual', 'NotEqual']:
                 # there is a nested boolexpr
                 self.checkBooleanExpr(node.children[0])
-                # We dont know if the inner expr is a valid boolean or not, let that error get caught elsewhere and 
-                # we'll assume one value is a bool so just grab the first one
-                node.children[0] = node.children[0].children[0]
-            elif node.children[1].name in ['IsEqual', 'NotEqual']: 
+            else:
+                self.checkExpr(node.children[0])
+
+            if node.children[1].name in ['IsEqual', 'NotEqual']: 
                 # there is a nested boolexpr
                 self.checkBooleanExpr(node.children[1])
-                # We dont know if the inner expr is a valid boolean or not, let that error get caught elsewhere and 
-                # we'll assume one value is a bool so just grab the first one
-                node.children[1] = node.children[1].children[0]
-            
-            if node.children[0].name is 'Add':
-                self.checkAddition(node.children[0])
-                # leave the function so we dont try to type check
-                # checkAddition already does type checking
-                return
-
-            if node.children[1].name is 'Add':
-                self.checkAddition(node.children[1])
-                # leave the function so we dont try to type check
-                # checkAddition already does type checking
-                return 
-
-            if self.getType(node.children[0].name) is 'variable':
-                self.scopeCheck(node.children[0], self.__cur_table)
-                self.markAsUsed(node.children[0].name, self.__cur_table)
-
-            if self.getType(node.children[1].name) is 'variable':
-                self.scopeCheck(node.children[1], self.__cur_table)
-                self.markAsUsed(node.children[1].name, self.__cur_table)
-            
+            else:
+                self.checkExpr(node.children[1])
             self.typeCheck(node.children[0], node.children[1], self.__cur_table)
+
+            
+           
+    def checkExpr(self, node):
+        expr_type = self.getType(node.name)
+
+        if node.name == 'Add':
+            self.checkAddition(node)
+
+        if expr_type == 'variable':
+            self.scopeCheck(node, self.__cur_table)
+            self.markAsUsed(node.name, self.__cur_table)
+
 
     def checkUnusedVariables(self, symbol_table):
         # look through the symbol table and find identifiers that have 

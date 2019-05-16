@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # 2019-2-26
+# Daniel Nicolas Gisolfi
 
 from node import Node
 from treelib import Node as Leaf
