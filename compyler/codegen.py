@@ -311,7 +311,8 @@ class CodeGenerator:
         self.storeAccMem(temp_addr)
         self.xRegCompare(temp_addr)
         jump2 = self.addJump()
-        self.code[jump2] = self.hex((256 - len(self.code)) + destination)
+        loc = (256 - len(self.code))
+        self.code[jump2] = self.hex(loc + destination)
         self.code[jump1] = self.hex((len(self.code) - jump1) - 1)
 
 
@@ -339,7 +340,9 @@ class CodeGenerator:
             return val_type
 
         elif value is 'Add':
-            pass
+            addr = self.generateAddition(node)
+            self.loadRegMem(register, addr)
+            return 'int'
 
         elif value is 'true':
             string = value
@@ -420,7 +423,7 @@ class CodeGenerator:
         # the right expression is not as easy, generate the needed code below
         
         if right_expr.name == 'Add':
-            pass
+            temp_addr = self.generateAddition(right_expr)
 
         if right_expr_type == 'boolean':
             string = right_expr.name
@@ -474,6 +477,46 @@ class CodeGenerator:
         self.loadXRegConst(self.hex(0))
         self.xRegCompare(temp_addr)
 
+    def generateAddition(self, node):
+        value1 = node.children[0].name
+        # in the addition statement the value can be either a int or a var(of type int)
+        # first load the Acc with the first value, the first value can't be a var
+        # so we don't have to check
+        self.loadAccConst(self.hex(int(value1)))
+        
+        # Now store the value in memory for future use
+        add_addr = self.addStatic(f'ADD_VAL{self.__temp_addr_count}', 'int')
+        self.storeAccMem(add_addr)
+        
+        value = node.children[1]
+        while(value.children[1].name == 'Add'):
+            # [print(i.name) for i in value.children]
+            # load Acc with the next value in the addition tree
+            self.loadAccConst(self.hex(int(value.children[0].name)))
+            # Add the value located at the sum to the new digit in the Acc
+            self.addToAcc(add_addr)
+            # save the new sum in the Acc for further use
+            self.storeAccMem(add_addr)
+            # get the next sub tree
+            value = value.children[1]
+            print(value.name)
+
+        # the last value is a variable
+        if re.match(r'[a-z]', value.name):
+            # get the temp address of the var
+            temp_addr = self.getTempAddr(value.name)
+            # add the value located at the address to the Acc
+            self.addToAcc(temp_addr)
+            self.storeAccMem(add_addr)
+        else:
+            # just one more digit, do the usual...
+            self.loadAccConst(self.hex(int(value.children[0].name)))
+            self.addToAcc(add_addr)
+            self.storeAccMem(add_addr)
+
+        # return the address at which to find the summed value
+        return add_addr
+        
            
     ''' Op Codes '''
     # some of these op codes have no reason to be there own methods
