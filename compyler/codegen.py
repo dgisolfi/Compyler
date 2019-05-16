@@ -201,9 +201,9 @@ class CodeGenerator:
         elif node.name == 'PrintStatement':
             self.generatePrintStatement(node)
         elif node.name == 'WhileStatement':
-            pass
+            self.generateWhileStatement(node)
         elif node.name == 'IfStatement':
-            pass
+            self.generateIfStatement(node)
 
     def generateBlock(self, node):
         self.__scope += 1
@@ -290,6 +290,24 @@ class CodeGenerator:
                 self.loadXRegConst(self.hex(2))
             self.sysCallPrint() 
 
+    def generateIfStatement(self, node):
+        bool_expr = node.children[0]
+        block = node.children[1]
+        self.generateIsEqualBoolean(bool_expr)
+        if bool_expr.name == 'NotEqual':
+            self.generateNotEqualBoolean(bool_expr)
+
+        jump = self.addJump()
+        self.generateBlock(block)
+        self.code[jump] = self.hex((len(self.code) - jump) - 1)
+
+    def generateWhileStatement(self, node):
+        bool_expr = node.children[0]
+        block = node.children[1]
+        self.generateIsEqualBoolean(bool_expr)
+        if bool_expr.name == 'NotEqual':
+            self.generateNotEqualBoolean(bool_expr)
+
 
     def generateExpr(self, node, register):
         value = node.name
@@ -370,8 +388,8 @@ class CodeGenerator:
             pass
 
         if variable_2_type == 'boolean':
-           
             string = variable_2.name
+
             # get the address of the boolean value in memory
             if self.getPointer(string) is None:
                 # add it to the heap if its not present

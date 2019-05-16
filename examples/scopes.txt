@@ -1,5 +1,8 @@
 {
-    print(("t" == "t"))
+    string a
+    a = "test"
+    print((3 == 3))
+    if (true == false) {
+        print(a)
+    }
 }
-
-/* boolexprs that use heap vals always return false */
