@@ -489,9 +489,11 @@ class CodeGenerator:
         # Now store the value in memory for future use
         add_addr = self.addStatic(f'ADD_VAL{self.__temp_addr_count}', 'int')
         self.storeAccMem(add_addr)
-        
+        # [print(i.name) for i in node.children]
         value = node.children[1]
-        while(value.children[1].name == 'Add'):
+        while( value.name == 'Add'):
+            print(value.children[0].name)
+            
             # [print(i.name) for i in value.children]
             # load Acc with the next value in the addition tree
             self.loadAccConst(self.hex(int(value.children[0].name)))
@@ -502,24 +504,17 @@ class CodeGenerator:
             # get the next sub tree
             value = value.children[1]
 
-        second_to_last_value = value.children[0]
-        # Second to last value....has to be a digit
-        self.loadAccConst(self.hex(int(second_to_last_value.name)))
-        self.addToAcc(add_addr)
-        self.storeAccMem(add_addr)
-
-        last_value = value.children[1]
         # the last value , could be a var or digit
         # if it is a var....
-        if re.match(r'[a-z]', last_value.name):
+        if re.match(r'[a-z]', value.name):
             # get the temp address of the var
-            temp_addr = self.getTempAddr(last_value.name)
+            temp_addr = self.getTempAddr(value.name)
             # add the value located at the address to the Acc
             self.addToAcc(temp_addr)
             self.storeAccMem(add_addr)
         else:
             # just one more digit, do the usual...
-            self.loadAccConst(self.hex(int(last_value.name)))
+            self.loadAccConst(self.hex(int(value.name)))
             self.addToAcc(add_addr)
             self.storeAccMem(add_addr)
 

@@ -1,14 +1,8 @@
-{
-    int i
-    i = 0
-    string s
-    s = "hello"
-    boolean b
-    b = (true == (1 != 2)) if (b == true) {
-        while (true != (b != (false == (2 != 3)))) {
-            i = 1 + i
-            print(s)
-        }
-    }
-    print("ugly code")
+{   
+    int a
+    a = 0
+    a = 3 + a
+    print(a)
+
+    print(1+2+3+4)
 }$
