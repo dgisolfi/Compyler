@@ -8,7 +8,7 @@ from warning import Warning
 from termcolor import colored
 
 class CodeGenerator:
-    def __init__(self, verbose, ast, symtable):
+    def __init__(self, verbose, program, ast, symtable):
         self.__ast = ast
         self.__symtable = symtable
         self.__code = []
@@ -18,14 +18,17 @@ class CodeGenerator:
         self.__jump = {}
         self.__scope = -1
         self.__cur_symtable = symtable
-  
         self.__temp_addr_count = 0
         self.__jump_count = 0
         self.verbose = verbose
+        self.program = program
         self.errors = 0
         self.warnings = 0
-
+        print(colored(f'\nGenerating Program {self.program}', 'blue', attrs=['bold']))
         self.generate()
+        if self.errors is 0:
+            self.checkMemoryLimit()
+            print(colored(f'Code Generation Completed for Program {self.program}', 'blue', attrs=['bold']))
 
     def __str__(self):
         rows = self.split(self.__code, 8)
@@ -67,14 +70,19 @@ class CodeGenerator:
         arrs.append(arr)
         return arrs
 
-    def error(self, msg, line, pos):
+    def error(self, msg):
         if self.errors is 0:
-            Error('Code Generation', msg, line, pos)
+            Error('Code Generation', msg)
             self.errors += 1
 
     def log(self, msg):
         if self.verbose and self.errors is 0:
             print(colored(f'GENERATOR ❯ {msg}', 'blue'))
+
+
+    def checkMemoryLimit(self):
+        if len(self.code) > 256:
+            self.error(f'Maximum Memory Limit of 256 Bytes Exceeded')
 
     def generate(self):
         # The Program must always start with a block
@@ -83,12 +91,8 @@ class CodeGenerator:
         self.progBreak()
         self.backpatch()
         self.mergeHeap()
-        print(self.__static)
-        print(self)
-
         
     ''' Generation Tools '''
-
     # Add static values and handle all the temp value stuff
     def addStatic(self, var, var_type):
         # stealing format of var@scope from alans example because there 
@@ -116,10 +120,11 @@ class CodeGenerator:
         symbol_table = self.__cur_symtable
         while scope is not -1:
             if symbol_table.get(var) is not None:
-                return self.__static.get(f'{var}@{scope}', None)
+                return self.__static.get(f'{var}@{symbol_table.scope}', None)
             else:
                 symbol_table = symbol_table.parent
                 scope -= 1
+       
         return None
 
     def getTempAddr(self, var):
@@ -238,7 +243,7 @@ class CodeGenerator:
         if val_type is 'string':
             if self.getTempAddr(var) is None:
                 self.addStatic(node.children[0].name, 'string')
-            
+        
         temp_addr = self.getTempAddr(var)
         self.storeAccMem(temp_addr)
         
@@ -376,34 +381,46 @@ class CodeGenerator:
 
 
     def generateBoolean(self, node):
-        left_expr = node.children[0]
-        right_expr = node.children[1]
-
-        # Two nested bool expr
-        if left_expr.name in ['IsEqual', 'NotEqual'] and right_expr.name in ['IsEqual', 'NotEqual']:
-            print('true')
-            # both exprs are boolean exprs, put result of right expr in X reg
-            self.generateBooleanExpr(left_expr)
-            temp_addr = self.generateBooleanExpr(right_expr)
-            self.loadXRegMem(temp_addr)
-
-        # Left nested bool expr
-        elif left_expr.name in ['IsEqual', 'NotEqual']:
-            # there is a nested boolexpr
-            self.generateExpr(right_expr, 'X')
-            temp_addr = self.generateBooleanExpr(left_expr)
-
-        
-        # Right nested bool expr
-        elif right_expr.name in ['IsEqual', 'NotEqual']:
-            # there is a nested boolexpr
-            self.generateExpr(left_expr, 'X')
-            temp_addr = self.generateBooleanExpr(right_expr)
-
-        # No nested bool exprs
+        # If the first var is just a normal boolean 
+        # we can start generating code for it
+        if node.name in ['true', 'false']:
+            string = node.name
+            # get the address of the value 'true' in memory
+            if self.getPointer(string) is None:
+                self.addToHeap(string)
+            pointer = self.getPointer(string)
+            # load the pointer as a constant
+            self.loadXRegConst(pointer)
+            self.loadAccConst(pointer)
+            temp_addr = self.addStatic(node.name, 'boolean')
+            # Now store the pointer into the temp address
+            self.storeAccMem(temp_addr)
         else:
-            temp_addr = self.generateBooleanExpr(node)
-       
+            left_expr = node.children[0]
+            right_expr = node.children[1]
+
+            # Two nested bool expr
+            if left_expr.name in ['IsEqual', 'NotEqual'] and right_expr.name in ['IsEqual', 'NotEqual']:
+                # both exprs are boolean exprs, put result of right expr in X reg
+                self.generateBooleanExpr(left_expr)
+                temp_addr = self.generateBooleanExpr(right_expr)
+                self.loadXRegMem(temp_addr)
+
+            # Left nested bool expr
+            elif left_expr.name in ['IsEqual', 'NotEqual']:
+                # there is a nested boolexpr
+                self.generateExpr(right_expr, 'X')
+                temp_addr = self.generateBooleanExpr(left_expr)
+
+            # Right nested bool expr
+            elif right_expr.name in ['IsEqual', 'NotEqual']:
+                # there is a nested boolexpr
+                self.generateExpr(left_expr, 'X')
+                temp_addr = self.generateBooleanExpr(right_expr)
+
+            # No nested bool exprs
+            else:
+                temp_addr = self.generateBooleanExpr(node)
 
         self.xRegCompare(temp_addr)
 
@@ -489,12 +506,8 @@ class CodeGenerator:
         # Now store the value in memory for future use
         add_addr = self.addStatic(f'ADD_VAL{self.__temp_addr_count}', 'int')
         self.storeAccMem(add_addr)
-        # [print(i.name) for i in node.children]
         value = node.children[1]
         while( value.name == 'Add'):
-            print(value.children[0].name)
-            
-            # [print(i.name) for i in value.children]
             # load Acc with the next value in the addition tree
             self.loadAccConst(self.hex(int(value.children[0].name)))
             # Add the value located at the sum to the new digit in the Acc

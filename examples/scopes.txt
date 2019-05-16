@@ -1,8 +1,30 @@
-{   
-    int a
-    a = 0
-    a = 3 + a
-    print(a)
+/* This consumes too much memory and will
+ - fail be default, even though it is valid */
+{
+	int a
+	a = 1
 
-    print(1+2+3+4)
-}$
+	if("a" == "a") {
+		a = 2
+		print("a now is two")
+	}
+
+	if(a != 1) {
+		a = 3
+		print(" a now is three")
+	}
+
+	if(a == 1) {
+		a = 3
+		print("this does not print")
+	}
+	
+	if true {
+	    print(" this will always be true")
+	}
+	
+	if false {
+	    print(" this will never print")
+	}
+	print(" this works right")
+} $

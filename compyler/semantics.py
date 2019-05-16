@@ -20,7 +20,9 @@ class SemanticAnalyser:
         self.verbose = verbose
         self.__symbol_table = None
         self.__cur_table = None
-        print(colored(f'Analyzing Program {self.program}', 'white', attrs=['bold']))
+        self.__scope = -1
+        self.__cur_scope_level = -1
+        print(colored(f'Analyzing Program {self.program}', 'green', attrs=['bold']))
         self.genAST()
         self.log('Building Symbol Table')
         self.analyze(self.__ast.root)
@@ -30,6 +32,7 @@ class SemanticAnalyser:
             self.log('Checking for Uninitialized Variables')
             self.checkUninitializedVariables(self.__symbol_table)
             self.log('Done.')
+            print(colored(f'Analysis Completed for Program {self.program}', 'green', attrs=['bold']))
     
     @property
     def ast(self):
@@ -74,6 +77,7 @@ class SemanticAnalyser:
         # parent once the block has been analyzed
         if node.name == 'Block':
             self.__cur_table = self.__cur_table.parent
+            self.__cur_scope_level -= 1
 
 
     def getVariable(self, symbol, table):
@@ -158,15 +162,19 @@ class SemanticAnalyser:
         
     def checkBlock(self, node):
         self.log(f'Checking {node.name}')
+        self.__scope += 1
+        self.__cur_scope_level += 1
+        
         if self.__symbol_table is None:
-            self.__symbol_table = SymbolTable(SymbolTable(None, -1), 0)
+            self.__symbol_table = SymbolTable(SymbolTable(None, -1, -1), 0, self.__cur_scope_level)
             self.__cur_table = self.__symbol_table
         else:
             self.log(f'New Scope Detected')
             # New Block means new scope
             self.__cur_table = SymbolTable(
                 self.__cur_table,
-                self.__cur_table.scope+1
+                self.__scope,
+                self.__cur_scope_level
             )
             self.__cur_table.parent.addChild(self.__cur_table)
 
@@ -270,8 +278,7 @@ class SemanticAnalyser:
                 self.checkBooleanExpr(node.children[1])
             else:
                 self.checkExpr(node.children[1])
- 
-        self.typeCheck(node.children[0], node.children[1], self.__cur_table)
+            self.typeCheck(node.children[0], node.children[1], self.__cur_table)
 
             
            

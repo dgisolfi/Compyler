@@ -41,8 +41,6 @@ def replaceTabs(code):
     help='Implements optimizations for source code.'
 )
 def main(path, verbose, prettytree, optimize):
-    # Overwrite the flag for verbose until alan is sick of seeing it
-    verbose = True
     
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
     # Gotta include the emoji just because Alan said not to
@@ -77,7 +75,7 @@ def main(path, verbose, prettytree, optimize):
             # to be accessed at 0)
             lex = Lexer(code, verbose, program+1)
             if lex.errors is not 0:
-                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed\n', 'white', attrs=['bold']))
+                print(colored(f'Skipping Parse for Program {lex.program}. Lex Failed\n', 'cyan', attrs=['bold']))
                 program += 1
                 continue
 
@@ -89,12 +87,12 @@ def main(path, verbose, prettytree, optimize):
             parse = Parser(tokens,verbose, prettytree, program+1)
            
             if parse.errors is not 0:
-                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'white', attrs=['bold']))
+                print(colored(f'Skipping CST Output for Program {parse.program}. Parse Failed\n', 'magenta', attrs=['bold']))
                 program += 1
                 continue
 
             if verbose:
-                print(colored(f'CST for Program {parse.program}.\n', 'white', attrs=['bold']))
+                print(colored(f'CST for Program {parse.program}.\n', 'magenta', attrs=['bold']))
                 print(parse.cst)
             
             errors += parse.errors
@@ -107,28 +105,26 @@ def main(path, verbose, prettytree, optimize):
                 continue
 
             if verbose:
-                print(colored(f'\nAST for Program {program+1}.', 'white', attrs=['bold']))
+                print(colored(f'\nAST for Program {program+1}.', 'green', attrs=['bold']))
                 print(semanticAnalyser.ast)
-                print(colored(f'Symbol Table for Program {program+1}.', 'white', attrs=['bold']))
+                print(colored(f'Symbol Table for Program {program+1}.', 'green', attrs=['bold']))
                 print(semanticAnalyser.symbol_table)
             
             errors += semanticAnalyser.errors
             warnings += semanticAnalyser.warnings
 
-            codeGenerator = CodeGenerator(verbose, semanticAnalyser.ast,semanticAnalyser.symbol_table)
+            codeGenerator = CodeGenerator(verbose, program+1, semanticAnalyser.ast,semanticAnalyser.symbol_table)
 
-            # if semanticAnalyser.errors is not 0:
-            #     print(colored(f'Skipping AST and Symbol Table Output for Program {semanticAnalyser.program}. Semantic Analysis Failed\n', 'white', attrs=['bold']))
-            #     program += 1
-            #     continue
+            if codeGenerator.errors is not 0:
+                print(colored(f'Skipping Machine Code output for Program {codeGenerator.program}. Code Generatoration Failed\n', 'white', attrs=['bold']))
+                program += 1
+                continue
 
-            # if verbose:
-            #     print(colored(f'\nAST for Program {program+1}.', 'white', attrs=['bold']))
-            #     print(semanticAnalyser.ast)
-            #     print(colored(f'Symbol Table for Program {program+1}.', 'white', attrs=['bold']))
-            #     print(semanticAnalyser.symbol_table)
-
-
+            print(colored(f'Machine Code for Program {program+1}.', 'blue', attrs=['bold']))
+            print(codeGenerator)
+            
+            errors += codeGenerator.errors
+            warnings += codeGenerator.warnings
 
             print(colored(f'Program {program+1} compiled with {errors} errors and {warnings} warnings.', 'white', attrs=['bold']))
             program += 1

@@ -44,7 +44,7 @@ class Lexer:
         if self.errors > 0:
             print(colored(f'Lex Failed for Program {self.program}. Errors: {self.errors}', 'red'))
         else:
-            print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}\n', 'white', attrs=['bold']))
+            print(colored(f'Lex Completed for Program {self.program}. Errors: {self.errors}\n', 'cyan', attrs=['bold']))
 
     def logError(self, msg, line, col):
         if self.errors is 0:
@@ -59,7 +59,7 @@ class Lexer:
             print(colored(f'LEXER ❯ {token.kind} [ {token.value} ] on line {token.line} column {token.position}', 'cyan'))
 
     def lex(self):
-        print(colored(f'Lexing Program {self.program}', 'white', attrs=['bold']))
+        print(colored(f'Lexing Program {self.program}', 'cyan', attrs=['bold']))
         # Check for EOP at end of file
         self.checkEOP()
 
