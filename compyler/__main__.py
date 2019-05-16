@@ -2,7 +2,7 @@
 # 2019-1-22
 # Daniel Nicolas Gisolfi
 
-ver='0.4.0'
+ver='0.4.2'
 package='compyler'
 
 import re
@@ -37,11 +37,7 @@ def replaceTabs(code):
     '--prettytree', '-p', is_flag=True,
     help='Outputs CST and AST in a fancier form.'
 )
-@click.option(
-    '--optimize', '-o', is_flag=True,
-    help='Implements optimizations for source code.'
-)
-def main(path, verbose, prettytree, optimize):
+def main(path, verbose, prettytree):
     
     # Given the path of a Alan++ source file to be compiled, generated code will be returned
     # Gotta include the emoji just because Alan said not to

@@ -2,7 +2,7 @@
 # Author:  Daniel Nicolas Gisolfi
 
 repo=Compyler
-version=0.4.0
+version=0.4.2
 
 release: clean intro build publish
 

@@ -1,0 +1,27 @@
+{
+    string a 
+    a = " i have the spoon "
+    string b 
+    b = " i lost the spoon "
+
+    int c
+    c = 0
+    int d
+    d = 0
+    int e
+    e = 9 + 9
+
+    while (c != e) {
+
+        if (c == 8) {
+            print(b)
+        }
+
+        if (d == 9) {
+            print(a)
+        }
+
+        c = 2 + c
+        d = 3 + d
+    }
+}$
