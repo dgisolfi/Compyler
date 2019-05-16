@@ -79,7 +79,6 @@ class CodeGenerator:
         if self.verbose and self.errors is 0:
             print(colored(f'GENERATOR ❯ {msg}', 'blue'))
 
-
     def checkMemoryLimit(self):
         if len(self.code) > 256:
             self.error(f'Maximum Memory Limit of 256 Bytes Exceeded')
@@ -188,7 +187,9 @@ class CodeGenerator:
         # no use adding a ton of zeros if the heap went unused
         if len(self.__heap) is 0:
             return
-    
+        if len(self.__code) is 0:
+            return
+
         max_addr = 255-len(self.__heap)
         [self.append('00') for null in range(len(self.code)-1, max_addr)]
         self.append(self.__heap)
