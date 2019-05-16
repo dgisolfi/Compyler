@@ -333,8 +333,6 @@ class CodeGenerator:
                 self.addToHeap(string)
 
             pointer = self.getPointer(string)
-            print(self.__heap)
-            print(pointer)
             # load the pointer into the Y reg
             self.loadRegConst(register, pointer)
             return val_type
@@ -412,18 +410,22 @@ class CodeGenerator:
         # Add additional jump for a not equal case
         if node.name == 'NotEqual':
             self.generateNotEqualExpr()
+        
+        return temp_addr
 
 
     def generateBooleanExpr(self, node):
         left_expr = node.children[0]
         right_expr = node.children[1]
-
+        
         self.generateExpr(left_expr, 'X')
         right_expr_type = self.getType(right_expr.name)
         # the right expression is not as easy, generate the needed code below
         
         if right_expr.name == 'Add':
             temp_addr = self.generateAddition(right_expr)
+        elif right_expr.name in ['IsEqual', 'NotEqual']:
+            temp_addr = self.generateBoolean(node)
 
         if right_expr_type == 'boolean':
             string = right_expr.name
@@ -499,18 +501,25 @@ class CodeGenerator:
             self.storeAccMem(add_addr)
             # get the next sub tree
             value = value.children[1]
-            print(value.name)
 
-        # the last value is a variable
-        if re.match(r'[a-z]', value.name):
+        second_to_last_value = value.children[0]
+        # Second to last value....has to be a digit
+        self.loadAccConst(self.hex(int(second_to_last_value.name)))
+        self.addToAcc(add_addr)
+        self.storeAccMem(add_addr)
+
+        last_value = value.children[1]
+        # the last value , could be a var or digit
+        # if it is a var....
+        if re.match(r'[a-z]', last_value.name):
             # get the temp address of the var
-            temp_addr = self.getTempAddr(value.name)
+            temp_addr = self.getTempAddr(last_value.name)
             # add the value located at the address to the Acc
             self.addToAcc(temp_addr)
             self.storeAccMem(add_addr)
         else:
             # just one more digit, do the usual...
-            self.loadAccConst(self.hex(int(value.children[0].name)))
+            self.loadAccConst(self.hex(int(last_value.name)))
             self.addToAcc(add_addr)
             self.storeAccMem(add_addr)
 
