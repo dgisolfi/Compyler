@@ -1,8 +1,7 @@
 {
-    string a
-    a = "test"
-    print((3 == 3))
-    if (true == false) {
+    int a
+    a = 4
+    while (a == 4) {
         print(a)
     }
 }

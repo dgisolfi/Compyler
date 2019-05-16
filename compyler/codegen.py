@@ -304,9 +304,21 @@ class CodeGenerator:
     def generateWhileStatement(self, node):
         bool_expr = node.children[0]
         block = node.children[1]
+        destination = len(self.code)
         self.generateIsEqualBoolean(bool_expr)
         if bool_expr.name == 'NotEqual':
             self.generateNotEqualBoolean(bool_expr)
+
+        jump1 = self.addJump()
+        self.generateBlock(block)
+        self.loadXRegConst(self.hex(2))
+        self.loadAccConst(self.hex(1))
+        temp_addr = self.addStatic(f'CompVal{self.__temp_addr_count}', 'int')
+        self.storeAccMem(temp_addr)
+        self.xRegCompare(temp_addr)
+        jump2 = self.addJump()
+        self.code[jump2] = self.hex((256 - len(self.code)) + destination)
+        self.code[jump1] = self.hex((len(self.code) - jump1) - 1)
 
 
     def generateExpr(self, node, register):
