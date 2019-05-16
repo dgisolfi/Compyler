@@ -94,6 +94,7 @@ class CodeGenerator:
         # stealing format of var@scope from alans example because there 
         # is no cleaner way to represent this.
         key =  f'{var}@{str(self.__scope)}'
+
         temp_addr = f'T{self.__temp_addr_count}XX'
         offset = len(self.__static)+1
 
@@ -243,10 +244,9 @@ class CodeGenerator:
         
 
     def generatePrintStatement(self, node):
-        # TODO: check for BoolOp
         value = node.children[0]
         if value.name in ['IsEqual', 'NotEqual']:
-            self.generateBooleanExpr(value)
+            self.generateBoolean(value)
         
             # before doing anything get a pointer 
             # to each of the values in memory
@@ -291,7 +291,7 @@ class CodeGenerator:
     def generateIfStatement(self, node):
         bool_expr = node.children[0]
         block = node.children[1]
-        self.generateBooleanExpr(bool_expr)
+        self.generateBoolean(bool_expr)
 
         jump = self.addJump()
         self.generateBlock(block)
@@ -301,7 +301,7 @@ class CodeGenerator:
         bool_expr = node.children[0]
         block = node.children[1]
         destination = len(self.code)
-        self.generateBooleanExpr(bool_expr)
+        self.generateBoolean(bool_expr)
 
         jump1 = self.addJump()
         self.generateBlock(block)
@@ -373,22 +373,50 @@ class CodeGenerator:
             self.loadRegMem(register, temp_addr)
             return temp_type
 
+
+    def generateBoolean(self, node):
+        left_expr = node.children[0]
+        right_expr = node.children[1]
+
+        # Two nested bool expr
+        if left_expr.name in ['IsEqual', 'NotEqual'] and right_expr.name in ['IsEqual', 'NotEqual']:
+            print('true')
+            # both exprs are boolean exprs, put result of right expr in X reg
+            self.generateBooleanExpr(left_expr)
+            temp_addr = self.generateBooleanExpr(right_expr)
+            self.loadXRegMem(temp_addr)
+
+        # Left nested bool expr
+        elif left_expr.name in ['IsEqual', 'NotEqual']:
+            # there is a nested boolexpr
+            self.generateExpr(right_expr, 'X')
+            temp_addr = self.generateBooleanExpr(left_expr)
+
+        
+        # Right nested bool expr
+        elif right_expr.name in ['IsEqual', 'NotEqual']:
+            # there is a nested boolexpr
+            self.generateExpr(left_expr, 'X')
+            temp_addr = self.generateBooleanExpr(right_expr)
+
+        # No nested bool exprs
+        else:
+            temp_addr = self.generateBooleanExpr(node)
+       
+
+        self.xRegCompare(temp_addr)
+
+        # Add additional jump for a not equal case
+        if node.name == 'NotEqual':
+            self.generateNotEqualExpr()
+
+
     def generateBooleanExpr(self, node):
         left_expr = node.children[0]
         right_expr = node.children[1]
-        
-        # check for nested boolean expressions
-        if left_expr.name in ['IsEqual', 'NotEqual']:
-            # there is a nested boolexpr
-            self.generateBooleanExpr(left_expr)
-        if right_expr.name in ['IsEqual', 'NotEqual']:
-            # there is a nested boolexpr
-            self.generateBooleanExpr(right_expr)
 
-        # otherwise generate the first expression as a normal expr
         self.generateExpr(left_expr, 'X')
         right_expr_type = self.getType(right_expr.name)
-
         # the right expression is not as easy, generate the needed code below
         
         if right_expr.name == 'Add':
@@ -406,7 +434,7 @@ class CodeGenerator:
 
             # take the pointer and store it in the static variable location
             self.loadAccConst(pointer)
-            temp_addr = self.addStatic(string, 'boolean')
+            temp_addr = self.addStatic(f'CompVal{self.__temp_addr_count}', 'boolean')
             self.storeAccMem(temp_addr) 
 
         elif right_expr_type == 'string':
@@ -421,23 +449,19 @@ class CodeGenerator:
             
             # Store the pointer to the string in the static location for that value
             self.loadAccConst(pointer)
-            temp_addr = self.addStatic(string, 'string')
+            temp_addr = self.addStatic(f'CompVal{self.__temp_addr_count}', 'string')
             self.storeAccMem(temp_addr)
 
         elif right_expr_type == 'int':
             integer = int(right_expr.name)
             self.loadAccConst(self.hex(integer))
-            temp_addr = self.addStatic(right_expr.name, 'int')
+            temp_addr = self.addStatic(f'CompVal{self.__temp_addr_count}', 'int')
             self.storeAccMem(temp_addr)
         elif right_expr_type == 'variable':
-            print('id')
             temp_addr = self.getTempAddr(right_expr.name)
 
-        self.xRegCompare(temp_addr)
-
-        # Add additional jump for a not equal case
-        if node.name == 'NotEqual':
-            self.generateNotEqualExpr()
+        return temp_addr
+    
 
     def generateNotEqualExpr(self):
         self.loadAccConst(self.hex(0))

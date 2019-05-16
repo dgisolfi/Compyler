@@ -96,7 +96,7 @@ class SemanticAnalyser:
     def getType(self, value):
         if value.isdigit() and re.match(r'[0-9]', value):
             return 'int'
-        elif value in ['true', 'false']:
+        elif value in ['true', 'false', 'IsEqual', 'NotEqual']:
             return 'boolean'
         elif value == 'CharList':
             return 'string'
@@ -256,48 +256,35 @@ class SemanticAnalyser:
 
     def checkBooleanExpr(self, node):
         self.log(f'Checking Boolean Expression')
-        [print(i.name) for i in node.children]
 
-        # a BooleanExpr can also just be a true or false,
-        # we dont need to check anything with that though
         if not node.name in ['true', 'false']:
+
             if node.children[0].name in ['IsEqual', 'NotEqual']:
                 # there is a nested boolexpr
                 self.checkBooleanExpr(node.children[0])
-                # We dont know if the inner expr is a valid boolean or not, let that error get caught elsewhere and 
-                # we'll assume one value is a bool so just grab the first one
-                node.children[0] = node.children[0].children[0]
+            else:
+                self.checkExpr(node.children[0])
 
             if node.children[1].name in ['IsEqual', 'NotEqual']: 
                 # there is a nested boolexpr
                 self.checkBooleanExpr(node.children[1])
-                # We dont know if the inner expr is a valid boolean or not, let that error get caught elsewhere and 
-                # we'll assume one value is a bool so just grab the first one
-                node.children[1] = node.children[1].children[0]
+            else:
+                self.checkExpr(node.children[1])
+ 
+        self.typeCheck(node.children[0], node.children[1], self.__cur_table)
 
-            # if self.getType(node.children[0].name) is 'boolean':
-
-            if self.getType(node.children[0].name) is 'variable':
-                self.scopeCheck(node.children[0], self.__cur_table)
-                self.markAsUsed(node.children[0].name, self.__cur_table)
-
-            if self.getType(node.children[1].name) is 'variable':
-                self.scopeCheck(node.children[1], self.__cur_table)
-                self.markAsUsed(node.children[1].name, self.__cur_table)
-
-            if node.children[0].name is 'Add':
-                self.checkAddition(node.children[0])
-                # leave the function so we dont try to type check
-                # checkAddition already does type checking
-                return
-
-            if node.children[1].name is 'Add':
-                self.checkAddition(node.children[1])
-                # leave the function so we dont try to type check
-                # checkAddition already does type checking
-                return 
             
-            self.typeCheck(node.children[0], node.children[1], self.__cur_table)
+           
+    def checkExpr(self, node):
+        expr_type = self.getType(node.name)
+
+        if node.name == 'Add':
+            self.checkAddition(node)
+
+        if expr_type == 'variable':
+            self.scopeCheck(node, self.__cur_table)
+            self.markAsUsed(node.name, self.__cur_table)
+
 
     def checkUnusedVariables(self, symbol_table):
         # look through the symbol table and find identifiers that have 
